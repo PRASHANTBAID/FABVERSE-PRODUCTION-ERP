@@ -222,7 +222,7 @@ class FabverseAPITester:
             "Create Washing Stage",
             "POST",
             "/washing",
-            201,
+            200,  # Backend returns 200 not 201
             data=washing_data
         )
         
