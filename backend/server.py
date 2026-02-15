@@ -401,6 +401,40 @@ async def delete_lot(lot_id: str):
     
     return {"message": "Lot and related data deleted"}
 
+class StageUpdateRequest(BaseModel):
+    stage: str
+
+@api_router.put("/lots/{lot_id}/stage")
+async def update_lot_stage(lot_id: str, request: StageUpdateRequest):
+    """Update lot stage directly (for Kanban drag-and-drop)"""
+    existing = await db.lots.find_one({"id": lot_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    valid_stages = ["Cutting", "Stitching", "Bartack", "Washing/Dyeing", "Completed"]
+    if request.stage not in valid_stages:
+        raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
+    
+    # Determine status based on stage
+    if request.stage == "Completed":
+        status = "Completed"
+    elif request.stage == "Cutting":
+        status = "Pending"
+    else:
+        status = "In Progress"
+    
+    await db.lots.update_one(
+        {"id": lot_id},
+        {"$set": {
+            "current_stage": request.stage,
+            "overall_status": status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    updated = await db.lots.find_one({"id": lot_id}, {"_id": 0})
+    return updated
+
 # ==================== STITCHING ROUTES ====================
 
 async def get_next_stitching_challan_no():
