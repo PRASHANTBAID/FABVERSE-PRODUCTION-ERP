@@ -44,10 +44,16 @@ class FabverseAPITester:
                     response_data = response.json() if response.text else {}
                     print(f"   Response: {json.dumps(response_data, indent=2)[:200]}...")
                 except:
-                    print(f"   Response: {response.text[:100]}...")
+                    if response.headers.get('content-type', '').startswith('application/vnd.openxmlformats'):
+                        print(f"   Response: Excel file received ({len(response.content)} bytes)")
+                        response_data = {"excel_file": True, "size": len(response.content)}
+                    else:
+                        print(f"   Response: {response.text[:100]}...")
+                        response_data = {}
             else:
                 print(f"❌ FAILED - Expected {expected_status}, got {response.status_code}")
                 print(f"   Response: {response.text[:200]}")
+                response_data = {}
 
             self.test_results.append({
                 'name': name,
@@ -59,7 +65,7 @@ class FabverseAPITester:
                 'response_text': response.text[:200] if response.text else ''
             })
 
-            return success, response.json() if success and response.text else {}
+            return success, response_data
 
         except requests.exceptions.RequestException as e:
             print(f"❌ FAILED - Network Error: {str(e)}")
