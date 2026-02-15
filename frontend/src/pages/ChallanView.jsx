@@ -294,36 +294,36 @@ export default function ChallanView() {
 
           {/* Notes Section */}
           {challan.notes && (
-            <div className="mb-8 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg print:bg-yellow-50 print:border-yellow-300">
-              <p className="text-xs uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-2 font-bold print:text-yellow-800">
+            <div className="mb-8 p-4 bg-amber-50 border border-amber-300 rounded-lg">
+              <p className="text-xs uppercase tracking-widest text-amber-700 mb-2 font-bold">
                 Important Notes
               </p>
-              <p className="text-amber-900 dark:text-amber-100 print:text-yellow-900">{challan.notes}</p>
+              <p className="text-amber-900">{challan.notes}</p>
             </div>
           )}
 
-          <Separator className="my-6 print:border-gray-300" />
+          <Separator className="my-6 border-gray-300" />
 
           {/* Signatures */}
           <div className="grid grid-cols-2 gap-8 mt-12">
             <div className="text-center">
-              <div className="h-16 border-b border-dashed border-border print:border-gray-400" />
-              <p className="text-sm text-muted-foreground mt-2 print:text-gray-600">Authorized Signature</p>
-              <p className="text-xs text-muted-foreground print:text-gray-500">(FABVERSE)</p>
+              <div className="h-16 border-b border-dashed border-gray-400" />
+              <p className="text-sm text-gray-600 mt-2">Authorized Signature</p>
+              <p className="text-xs text-gray-500">({firmSettings.firm_name})</p>
             </div>
             <div className="text-center">
-              <div className="h-16 border-b border-dashed border-border print:border-gray-400" />
-              <p className="text-sm text-muted-foreground mt-2 print:text-gray-600">Receiver Signature</p>
-              <p className="text-xs text-muted-foreground print:text-gray-500">({challan.recipient_name})</p>
+              <div className="h-16 border-b border-dashed border-gray-400" />
+              <p className="text-sm text-gray-600 mt-2">Receiver Signature</p>
+              <p className="text-xs text-gray-500">({challan.recipient_name})</p>
             </div>
           </div>
 
           {/* Footer */}
-          <div className="mt-8 pt-4 border-t border-border print:border-gray-300 text-center">
-            <p className="text-xs text-muted-foreground print:text-gray-500">
-              This is a computer generated challan from FABVERSE ERP System
+          <div className="mt-8 pt-4 border-t border-gray-300 text-center">
+            <p className="text-xs text-gray-500">
+              This is a computer generated challan from {firmSettings.firm_name} ERP System
             </p>
-            <p className="text-xs text-muted-foreground print:text-gray-500">
+            <p className="text-xs text-gray-500">
               Generated on: {new Date().toLocaleString()}
             </p>
           </div>
