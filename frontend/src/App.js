@@ -7,6 +7,8 @@ import "@/App.css";
 // Pages
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import Lots from "@/pages/Lots";
+import Challans from "@/pages/Challans";
 import CuttingForm from "@/pages/CuttingForm";
 import StitchingForm from "@/pages/StitchingForm";
 import BartackForm from "@/pages/BartackForm";
@@ -15,7 +17,7 @@ import LotDetail from "@/pages/LotDetail";
 import ChallanView from "@/pages/ChallanView";
 import ImportExport from "@/pages/ImportExport";
 import Reports from "@/pages/Reports";
-import Settings from "@/pages/Settings";
+import ChangePassword from "@/pages/ChangePassword";
 import Layout from "@/components/Layout";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -25,11 +27,6 @@ export const API = `${BACKEND_URL}/api`;
 const AuthContext = createContext(null);
 
 export const useAuth = () => useContext(AuthContext);
-
-// Theme Context
-const ThemeContext = createContext(null);
-
-export const useTheme = () => useContext(ThemeContext);
 
 // API instance with auth
 export const api = axios.create({
@@ -72,7 +69,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [theme, setTheme] = useState(() => localStorage.getItem("fabverse_theme") || "dark");
 
   useEffect(() => {
     const token = localStorage.getItem("fabverse_token");
@@ -83,12 +79,6 @@ function App() {
     }
     setLoading(false);
   }, []);
-
-  useEffect(() => {
-    document.documentElement.classList.remove("light", "dark");
-    document.documentElement.classList.add(theme);
-    localStorage.setItem("fabverse_theme", theme);
-  }, [theme]);
 
   const login = async (username, password) => {
     try {
@@ -114,41 +104,37 @@ function App() {
     toast.success("Logged out");
   };
 
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-2xl font-bold text-foreground">FABVERSE</div>
+      <div className="min-h-screen flex items-center justify-center bg-blue-50">
+        <div className="animate-pulse text-2xl font-bold text-blue-600">FABVERSE</div>
       </div>
     );
   }
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
-        <BrowserRouter>
-          <Toaster richColors position="top-right" />
-          <Routes>
-            <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/cutting/new" element={<ProtectedRoute><CuttingForm /></ProtectedRoute>} />
-            <Route path="/cutting/:lotId" element={<ProtectedRoute><CuttingForm /></ProtectedRoute>} />
-            <Route path="/lot/:lotId" element={<ProtectedRoute><LotDetail /></ProtectedRoute>} />
-            <Route path="/lot/:lotId/stitching" element={<ProtectedRoute><StitchingForm /></ProtectedRoute>} />
-            <Route path="/lot/:lotId/bartack" element={<ProtectedRoute><BartackForm /></ProtectedRoute>} />
-            <Route path="/lot/:lotId/washing" element={<ProtectedRoute><WashingForm /></ProtectedRoute>} />
-            <Route path="/challan/:challanId" element={<ProtectedRoute><ChallanView /></ProtectedRoute>} />
-            <Route path="/import-export" element={<ProtectedRoute><ImportExport /></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthContext.Provider>
-    </ThemeContext.Provider>
+    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+      <BrowserRouter>
+        <Toaster richColors position="top-right" />
+        <Routes>
+          <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+          <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+          <Route path="/lots" element={<ProtectedRoute><Lots /></ProtectedRoute>} />
+          <Route path="/challans" element={<ProtectedRoute><Challans /></ProtectedRoute>} />
+          <Route path="/cutting/new" element={<ProtectedRoute><CuttingForm /></ProtectedRoute>} />
+          <Route path="/cutting/:lotId" element={<ProtectedRoute><CuttingForm /></ProtectedRoute>} />
+          <Route path="/lot/:lotId" element={<ProtectedRoute><LotDetail /></ProtectedRoute>} />
+          <Route path="/lot/:lotId/stitching" element={<ProtectedRoute><StitchingForm /></ProtectedRoute>} />
+          <Route path="/lot/:lotId/bartack" element={<ProtectedRoute><BartackForm /></ProtectedRoute>} />
+          <Route path="/lot/:lotId/washing" element={<ProtectedRoute><WashingForm /></ProtectedRoute>} />
+          <Route path="/challan/:challanId" element={<ProtectedRoute><ChallanView /></ProtectedRoute>} />
+          <Route path="/import-export" element={<ProtectedRoute><ImportExport /></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+          <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthContext.Provider>
   );
 }
 
