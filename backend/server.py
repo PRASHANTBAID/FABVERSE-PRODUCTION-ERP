@@ -625,6 +625,12 @@ async def get_challans(challan_type: str = None, lot_id: str = None):
         query["lot_id"] = lot_id
     
     challans = await db.challans.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Fetch lot data for each challan
+    for challan in challans:
+        lot = await db.lots.find_one({"id": challan.get("lot_id")}, {"_id": 0, "lot_no": 1})
+        challan["lot"] = lot
+    
     return challans
 
 @api_router.get("/challans/{challan_id}")
