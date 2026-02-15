@@ -151,7 +151,7 @@ async def get_current_user(authorization: str = None):
         token = authorization.replace("Bearer ", "")
         payload = verify_token(token)
         return payload
-    except:
+    except Exception:
         raise HTTPException(status_code=401, detail="Invalid token")
 
 # ==================== INIT ADMIN ====================
