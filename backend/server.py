@@ -209,6 +209,42 @@ async def get_me(authorization: str = Header(None)):
     user_data = await get_current_user(authorization)
     return {"username": user_data["username"]}
 
+# ==================== FIRM SETTINGS ROUTES ====================
+
+@api_router.get("/settings/firm")
+async def get_firm_settings():
+    settings = await db.firm_settings.find_one({"type": "firm"}, {"_id": 0})
+    if not settings:
+        # Return default settings
+        return {
+            "firm_name": "FABVERSE",
+            "address_line1": "Plot No. 2312, Lane No. 12",
+            "address_line2": "Raghubar Pura No. 2",
+            "address_line3": "",
+            "city_state_pin": "Gandhi Nagar, Delhi - 31",
+            "gst_number": "",
+            "mobile": "9999994690",
+            "email": "",
+            "logo_url": "https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg"
+        }
+    return settings
+
+@api_router.put("/settings/firm")
+async def update_firm_settings(settings: FirmSettings, authorization: str = Header(None)):
+    await get_current_user(authorization)  # Verify auth
+    
+    settings_dict = settings.model_dump()
+    settings_dict["type"] = "firm"
+    settings_dict["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.firm_settings.update_one(
+        {"type": "firm"},
+        {"$set": settings_dict},
+        upsert=True
+    )
+    
+    return {"message": "Firm settings updated successfully"}
+
 # ==================== LOT ROUTES ====================
 
 @api_router.post("/lots")
