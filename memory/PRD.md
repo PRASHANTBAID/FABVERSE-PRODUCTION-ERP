@@ -114,6 +114,7 @@ Based on user reference images, the following UI changes were implemented:
 - ✅ UI/UX overhaul matching reference images
 - ✅ Login page with navy blue theme
 - ✅ Dashboard with stats cards and Table/Kanban toggle
+- ✅ **Kanban drag-and-drop** to move lots between stages
 - ✅ Separate Lots page with delete functionality
 - ✅ Separate Challans page with type filter
 - ✅ Redesigned Challan views (Stitching & Washing)
