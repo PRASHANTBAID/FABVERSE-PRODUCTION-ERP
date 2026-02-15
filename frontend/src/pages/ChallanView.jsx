@@ -3,10 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/App";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
-import { FileText, Printer, Download, Factory, Loader2 } from "lucide-react";
+import { ArrowLeft, Printer, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -26,12 +24,9 @@ export default function ChallanView() {
 
   const fetchChallanData = async () => {
     try {
-      // Fetch firm settings
       const firmRes = await api.get("/settings/firm");
       setFirmSettings(firmRes.data);
 
-      // Parse challanId format: "stitching-{lotId}" or "washing-{lotId}"
-      // lotId is a UUID so we need to split only on first hyphen
       const firstHyphen = challanId.indexOf("-");
       const type = challanId.substring(0, firstHyphen);
       const lotId = challanId.substring(firstHyphen + 1);
@@ -70,18 +65,13 @@ export default function ChallanView() {
     }
   };
 
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleDownloadPDF = async () => {
+  const handlePrint = async () => {
     if (!challanRef.current) return;
     
     setDownloading(true);
     try {
       const element = challanRef.current;
       
-      // Create canvas from the challan element
       const canvas = await html2canvas(element, {
         scale: 2,
         useCORS: true,
@@ -92,7 +82,6 @@ export default function ChallanView() {
       
       const imgData = canvas.toDataURL('image/png');
       
-      // Create PDF
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
@@ -109,7 +98,6 @@ export default function ChallanView() {
       
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
       
-      // Download PDF
       const fileName = `${challan.type}_Challan_${challan.challan_number}_Lot_${lot.lot_no}.pdf`;
       pdf.save(fileName);
       
@@ -125,7 +113,7 @@ export default function ChallanView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -135,200 +123,161 @@ export default function ChallanView() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6" data-testid="challan-view">
-      {/* Actions - Hidden on print */}
-      <div className="flex justify-between items-center no-print">
-        <h1 className="text-2xl font-bold uppercase tracking-wide">
-          {challan.type} Challan
-        </h1>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            onClick={handleDownloadPDF} 
-            disabled={downloading}
-            data-testid="download-pdf-btn"
+    <div className="space-y-6" data-testid="challan-view">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate(-1)}
+            className="text-gray-600 hover:text-gray-800"
+            data-testid="back-btn"
           >
-            {downloading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              <>
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </>
-            )}
+            <ArrowLeft className="w-5 h-5" />
           </Button>
-          <Button onClick={handlePrint} data-testid="print-challan-btn">
-            <Printer className="w-4 h-4 mr-2" />
-            Print
-          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Challan {challan.challan_number}</h1>
+            <p className="text-gray-500 text-sm">{challan.type} Challan</p>
+          </div>
         </div>
+        <Button 
+          onClick={handlePrint} 
+          disabled={downloading}
+          className="bg-blue-600 hover:bg-blue-700"
+          data-testid="print-challan-btn"
+        >
+          {downloading ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <Printer className="w-4 h-4 mr-2" />
+              Print Challan
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* Challan Document */}
-      <Card ref={challanRef} className="industrial-card print:shadow-none print:border-2 print:border-black bg-white dark:bg-white text-black">
-        <CardContent className="p-8 print:p-6">
-          {/* Header */}
-          <div className="flex justify-between items-start mb-8">
+      {/* Challan Card */}
+      <div ref={challanRef} className="bg-white rounded-xl shadow-sm border overflow-hidden max-w-3xl mx-auto">
+        {/* Header Section */}
+        <div className="p-6 border-b">
+          <div className="flex justify-between items-start">
             <div className="flex items-center gap-4">
-              {firmSettings.logo_url ? (
-                <img 
-                  src={firmSettings.logo_url} 
-                  alt={`${firmSettings.firm_name} Logo`}
-                  className="w-20 h-20 object-contain"
-                  crossOrigin="anonymous"
-                />
-              ) : (
-                <div className="w-20 h-20 rounded-lg bg-gray-800 flex items-center justify-center">
-                  <Factory className="w-10 h-10 text-white" />
-                </div>
-              )}
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
+                <span className="text-2xl font-bold text-gray-600">$</span>
+              </div>
               <div>
-                <h1 className="text-3xl font-bold tracking-wider uppercase logo-text text-gray-900">{firmSettings.firm_name}</h1>
-                <p className="text-sm text-gray-500">Garment Production</p>
+                <h2 className="text-xl font-bold text-gray-800">{firmSettings.firm_name}</h2>
+                <p className="text-sm text-gray-500">
+                  {firmSettings.address_line1}
+                  {firmSettings.address_line2 && `, ${firmSettings.address_line2}`}
+                </p>
+                <p className="text-sm text-gray-500">{firmSettings.city_state_pin}</p>
+                {firmSettings.mobile && <p className="text-sm text-gray-500">Phone: {firmSettings.mobile}</p>}
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs uppercase tracking-widest text-gray-500">
-                {challan.type} Challan
-              </p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">
-                {challan.challan_number}
-              </p>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Challan No</p>
+              <p className="text-2xl font-bold text-blue-600">{challan.challan_number}</p>
+              <p className="text-sm text-gray-500">Date: {formatDate(challan.issue_date)}</p>
             </div>
           </div>
+        </div>
 
-          {/* Firm Details */}
-          <div className="grid grid-cols-2 gap-8 mb-8 p-4 bg-gray-100 rounded-lg">
+        {/* Challan Type Badge */}
+        <div className="px-6 py-3 border-b">
+          <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wide ${
+            challan.type === "Stitching" 
+              ? "bg-emerald-100 text-emerald-700" 
+              : "bg-amber-100 text-amber-700"
+          }`}>
+            {challan.type} Challan
+          </span>
+        </div>
+
+        {/* Recipient Section */}
+        <div className="px-6 py-4 bg-gray-50 border-b">
+          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
+            {challan.type === "Stitching" ? "Fabricator" : "Washing/Dyeing Firm"}
+          </p>
+          <p className="text-xl font-bold text-gray-800">{challan.recipient_name}</p>
+        </div>
+
+        {/* Lot Details */}
+        <div className="p-6 border-b">
+          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">Lot Details</h3>
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">From</p>
-              <p className="font-bold text-lg text-gray-900">{firmSettings.firm_name}</p>
-              {firmSettings.address_line1 && <p className="text-sm text-gray-600">{firmSettings.address_line1}</p>}
-              {firmSettings.address_line2 && <p className="text-sm text-gray-600">{firmSettings.address_line2}</p>}
-              {firmSettings.address_line3 && <p className="text-sm text-gray-600">{firmSettings.address_line3}</p>}
-              {firmSettings.city_state_pin && <p className="text-sm text-gray-600">{firmSettings.city_state_pin}</p>}
-              {firmSettings.gst_number && <p className="text-sm text-gray-600">GST: {firmSettings.gst_number}</p>}
-              {firmSettings.mobile && <p className="text-sm font-medium text-gray-700">Mobile: {firmSettings.mobile}</p>}
-              {firmSettings.email && <p className="text-sm text-gray-600">Email: {firmSettings.email}</p>}
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Lot No</p>
+              <p className="text-lg font-bold text-gray-800">{lot.lot_no}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">To</p>
-              <p className="font-bold text-lg text-gray-900">{challan.recipient_name}</p>
-              <p className="text-sm text-gray-600">{challan.type} Partner</p>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Pieces Issued</p>
+              <p className="text-lg font-bold text-gray-800">{challan.pcs_issued}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Style</p>
+              <p className="text-lg font-semibold text-gray-700">{lot.style || "-"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Fabric</p>
+              <p className="text-lg font-semibold text-gray-700">{lot.fabric_name || "-"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Sizes</p>
+              <p className="text-lg font-semibold text-gray-700">{lot.sizes || "-"}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-400 uppercase tracking-wide">Gender</p>
+              <p className="text-lg font-semibold text-gray-700">{lot.gender || "-"}</p>
             </div>
           </div>
+        </div>
 
-          <Separator className="my-6 border-gray-300" />
-
-          {/* Challan Details */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Date</p>
-              <p className="font-bold text-lg text-gray-900">{formatDate(challan.issue_date)}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Lot No</p>
-              <p className="font-bold text-lg text-gray-900">{lot.lot_no}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Stage</p>
-              <p className="font-bold text-lg text-gray-900">{challan.type}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-gray-500">Pieces</p>
-              <p className="font-bold text-lg text-gray-900">{challan.pcs_issued}</p>
-            </div>
+        {/* Washing/Dyeing Instructions (for Stitching Challan) */}
+        {challan.type === "Stitching" && lot.dyeing_or_washing_instructions && (
+          <div className="px-6 py-4 border-b">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Washing/Dyeing Instructions</h3>
+            <p className="text-gray-700 bg-gray-50 rounded-lg p-3">{lot.dyeing_or_washing_instructions}</p>
           </div>
+        )}
 
-          {/* Product Details */}
-          <div className="border border-gray-300 rounded-lg overflow-hidden mb-8">
-            <table className="w-full">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="text-left p-3 text-xs uppercase tracking-widest font-bold text-gray-700">Item</th>
-                  <th className="text-left p-3 text-xs uppercase tracking-widest font-bold text-gray-700">Details</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-t border-gray-300">
-                  <td className="p-3 font-medium text-gray-700">Style</td>
-                  <td className="p-3 text-gray-900">{lot.style || "-"}</td>
-                </tr>
-                <tr className="border-t border-gray-300 bg-gray-50">
-                  <td className="p-3 font-medium text-gray-700">Fabric</td>
-                  <td className="p-3 text-gray-900">{lot.fabric_name || "-"}</td>
-                </tr>
-                <tr className="border-t border-gray-300">
-                  <td className="p-3 font-medium text-gray-700">Fabric Grade</td>
-                  <td className="p-3 text-gray-900">{lot.fabric_grade || "-"}</td>
-                </tr>
-                <tr className="border-t border-gray-300 bg-gray-50">
-                  <td className="p-3 font-medium text-gray-700">Gender</td>
-                  <td className="p-3 text-gray-900">{lot.gender || "-"}</td>
-                </tr>
-                <tr className="border-t border-gray-300">
-                  <td className="p-3 font-medium text-gray-700">Sizes</td>
-                  <td className="p-3 text-gray-900">{lot.sizes || "-"}</td>
-                </tr>
-                <tr className="border-t border-gray-300 bg-gray-50">
-                  <td className="p-3 font-medium text-gray-700">Total Pieces</td>
-                  <td className="p-3 font-bold text-lg text-gray-900">{challan.pcs_issued}</td>
-                </tr>
-                {challan.type === "Washing" && challan.bartack_person && (
-                  <tr className="border-t border-gray-300">
-                    <td className="p-3 font-medium text-gray-700">Bartack Done By</td>
-                    <td className="p-3 font-bold text-blue-700">{challan.bartack_person}</td>
-                  </tr>
-                )}
-                {lot.dyeing_or_washing_instructions && (
-                  <tr className="border-t border-gray-300 bg-gray-50">
-                    <td className="p-3 font-medium text-gray-700">Washing Instructions</td>
-                    <td className="p-3 text-gray-900">{lot.dyeing_or_washing_instructions}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        {/* Bartack Done By (for Washing Challan) */}
+        {challan.type === "Washing" && challan.bartack_person && (
+          <div className="px-6 py-4 bg-amber-50 border-b">
+            <p className="text-xs text-amber-600 uppercase tracking-wide mb-1">Bartack Done By</p>
+            <p className="text-lg font-bold text-amber-700">{challan.bartack_person}</p>
           </div>
+        )}
 
-          {/* Notes Section */}
-          {challan.notes && (
-            <div className="mb-8 p-4 bg-amber-50 border border-amber-300 rounded-lg">
-              <p className="text-xs uppercase tracking-widest text-amber-700 mb-2 font-bold">
-                Important Notes
-              </p>
-              <p className="text-amber-900">{challan.notes}</p>
-            </div>
-          )}
+        {/* Notes */}
+        {challan.notes && (
+          <div className="px-6 py-4 border-b">
+            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Notes</h3>
+            <p className="text-gray-700 bg-gray-50 rounded-lg p-3">{challan.notes}</p>
+          </div>
+        )}
 
-          <Separator className="my-6 border-gray-300" />
-
-          {/* Signatures */}
-          <div className="grid grid-cols-2 gap-8 mt-12">
+        {/* Signatures */}
+        <div className="p-6">
+          <div className="grid grid-cols-2 gap-8">
             <div className="text-center">
-              <div className="h-16 border-b border-dashed border-gray-400" />
-              <p className="text-sm text-gray-600 mt-2">Authorized Signature</p>
-              <p className="text-xs text-gray-500">({firmSettings.firm_name})</p>
+              <div className="h-16 border-b-2 border-dashed border-gray-300 mb-2" />
+              <p className="text-sm text-gray-500">Authorized Signature</p>
+              <p className="text-xs text-gray-400">({firmSettings.firm_name})</p>
             </div>
             <div className="text-center">
-              <div className="h-16 border-b border-dashed border-gray-400" />
-              <p className="text-sm text-gray-600 mt-2">Receiver Signature</p>
-              <p className="text-xs text-gray-500">({challan.recipient_name})</p>
+              <div className="h-16 border-b-2 border-dashed border-gray-300 mb-2" />
+              <p className="text-sm text-gray-500">Receiver Signature</p>
+              <p className="text-xs text-gray-400">({challan.recipient_name})</p>
             </div>
           </div>
-
-          {/* Footer */}
-          <div className="mt-8 pt-4 border-t border-gray-300 text-center">
-            <p className="text-xs text-gray-500">
-              This is a computer generated challan from {firmSettings.firm_name} ERP System
-            </p>
-            <p className="text-xs text-gray-500">
-              Generated on: {new Date().toLocaleString()}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
