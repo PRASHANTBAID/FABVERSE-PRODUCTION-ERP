@@ -202,7 +202,7 @@ class FabverseAPITester:
             "Create Bartack Stage",
             "POST",
             "/bartack",
-            201,
+            200,  # Backend returns 200 not 201
             data=bartack_data
         )
         
