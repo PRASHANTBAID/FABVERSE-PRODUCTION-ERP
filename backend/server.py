@@ -906,6 +906,91 @@ async def get_reports_summary():
         "washing_load": [{"firm": item["_id"], "lots": item["count"]} for item in wash_load if item["_id"]]
     }
 
+@api_router.get("/reports/export")
+async def export_reports():
+    # Get all the report data
+    
+    # Lots by stage
+    pipeline_stage = [
+        {"$group": {"_id": "$current_stage", "count": {"$sum": 1}}}
+    ]
+    stage_counts = await db.lots.aggregate(pipeline_stage).to_list(100)
+    
+    # Lots by status
+    pipeline_status = [
+        {"$group": {"_id": "$overall_status", "count": {"$sum": 1}}}
+    ]
+    status_counts = await db.lots.aggregate(pipeline_status).to_list(100)
+    
+    # Fabric usage
+    pipeline_fabric = [
+        {"$group": {"_id": "$fabric_name", "total_meters": {"$sum": "$total_meters_or_kgs_used"}, "total_cost": {"$sum": {"$multiply": ["$total_meters_or_kgs_used", "$fabric_price_per_meter_or_kg"]}}}}
+    ]
+    fabric_usage = await db.lots.aggregate(pipeline_fabric).to_list(100)
+    
+    # Stitching load
+    pipeline_stitch = [
+        {"$group": {"_id": "$stitching_fabricator_name", "count": {"$sum": 1}}}
+    ]
+    stitch_load = await db.stitching_stages.aggregate(pipeline_stitch).to_list(100)
+    
+    # Washing load
+    pipeline_wash = [
+        {"$group": {"_id": "$dyeing_person_firm_name", "count": {"$sum": 1}}}
+    ]
+    wash_load = await db.washing_stages.aggregate(pipeline_wash).to_list(100)
+    
+    # Create Excel workbook with multiple sheets
+    output = io.BytesIO()
+    
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        # Summary sheet
+        summary_data = {
+            "Metric": ["Total Lots", "Total Pieces"],
+            "Value": [
+                await db.lots.count_documents({}),
+                sum([lot.get("total_pcs_cut", 0) async for lot in db.lots.find({}, {"total_pcs_cut": 1})])
+            ]
+        }
+        pd.DataFrame(summary_data).to_excel(writer, sheet_name='Summary', index=False)
+        
+        # Lots by Stage
+        if stage_counts:
+            stage_df = pd.DataFrame([{"Stage": item["_id"], "Count": item["count"]} for item in stage_counts if item["_id"]])
+            stage_df.to_excel(writer, sheet_name='Lots by Stage', index=False)
+        
+        # Lots by Status
+        if status_counts:
+            status_df = pd.DataFrame([{"Status": item["_id"], "Count": item["count"]} for item in status_counts if item["_id"]])
+            status_df.to_excel(writer, sheet_name='Lots by Status', index=False)
+        
+        # Fabric Usage
+        if fabric_usage:
+            fabric_df = pd.DataFrame([{
+                "Fabric": item["_id"], 
+                "Total Meters/Kgs": round(item["total_meters"], 2), 
+                "Total Cost (₹)": round(item["total_cost"], 2)
+            } for item in fabric_usage if item["_id"]])
+            fabric_df.to_excel(writer, sheet_name='Fabric Usage', index=False)
+        
+        # Stitching Load
+        if stitch_load:
+            stitch_df = pd.DataFrame([{"Fabricator": item["_id"], "Lots Count": item["count"]} for item in stitch_load if item["_id"]])
+            stitch_df.to_excel(writer, sheet_name='Stitching Load', index=False)
+        
+        # Washing Load
+        if wash_load:
+            wash_df = pd.DataFrame([{"Washing Firm": item["_id"], "Lots Count": item["count"]} for item in wash_load if item["_id"]])
+            wash_df.to_excel(writer, sheet_name='Washing Load', index=False)
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=fabverse_reports_{datetime.now().strftime('%Y%m%d')}.xlsx"}
+    )
+
 # ==================== DASHBOARD STATS ====================
 
 @api_router.get("/dashboard/stats")
