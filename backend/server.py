@@ -670,20 +670,34 @@ async def import_excel(file: UploadFile = File(...)):
                     return val.strftime('%Y-%m-%d')
                 if isinstance(val, date):
                     return val.strftime('%Y-%m-%d')
-                return str(val)
+                try:
+                    # Try parsing string dates
+                    parsed = pd.to_datetime(val)
+                    return parsed.strftime('%Y-%m-%d')
+                except:
+                    return str(val)
+            
+            # Safe int conversion
+            def safe_int(val, default=0):
+                if pd.isna(val) or val == '' or val is None:
+                    return default
+                try:
+                    return int(float(val))
+                except:
+                    return default
             
             lot_data = {
                 "lot_no": lot_no,
-                "cutting_date": parse_date(row.get('Date', row.get('DATE', row.get('cutting_date', '')))),
-                "gender": str(row.get('Gender', row.get('GENDER', ''))),
-                "sizes": str(row.get('Size', row.get('SIZE', row.get('sizes', '')))),
-                "style": str(row.get('Style', row.get('STYLE', ''))),
-                "fabric_name": str(row.get('Fabric', row.get('FABRIC', row.get('fabric_name', '')))),
+                "cutting_date": parse_date(row.get('DATE', row.get('Date', row.get('cutting_date', '')))),
+                "gender": "",
+                "sizes": str(row.get('SIZE', row.get('Size', row.get('sizes', '')))).strip() if not pd.isna(row.get('SIZE', row.get('Size', ''))) else "",
+                "style": str(row.get('STYLE', row.get('Style', ''))).strip() if not pd.isna(row.get('STYLE', row.get('Style', ''))) else "",
+                "fabric_name": str(row.get('FABRIC', row.get('Fabric', row.get('fabric_name', '')))).strip() if not pd.isna(row.get('FABRIC', row.get('Fabric', ''))) else "",
                 "fabric_grade": "Fresh",
                 "dyeing_or_washing_instructions": "",
                 "rolls": [],
                 "total_meters_or_kgs_used": 0,
-                "total_pcs_cut": int(row.get('Pcs', row.get('PCS', row.get('total_pcs_cut', 0)))) if not pd.isna(row.get('Pcs', row.get('PCS', row.get('total_pcs_cut', 0)))) else 0,
+                "total_pcs_cut": safe_int(row.get('PCS', row.get('Pcs', row.get('total_pcs_cut', 0)))),
                 "avg_fabric_used_per_pc": 0,
                 "fabric_price_per_meter_or_kg": 0,
                 "fabric_cost_per_pc": 0,
@@ -706,19 +720,31 @@ async def import_excel(file: UploadFile = File(...)):
                 imported_count += 1
                 lot_id = lot_data["id"]
             
-            # Import stitching data
-            stitch_fabricator = row.get('Stitching fabricator', row.get('STITCHING FABRICATOR', ''))
-            stitch_issue_date = parse_date(row.get('Lot issue date to stitching', row.get('LOT ISSUE DATE TO STITCHING', '')))
+            # Import stitching data - matching your Excel columns exactly
+            # Your columns: 'STITCHING ', 'LOT ISSUE DATE', 'CHALLAN NO', 'RECEIVE DATE FROM STITCHING ', 'RECEIVED BACK NO OF PCS'
+            stitch_fabricator = row.get('STITCHING ', row.get('STITCHING', row.get('Stitching fabricator', '')))
+            stitch_issue_date = parse_date(row.get('LOT ISSUE DATE', row.get('Lot issue date to stitching', '')))
+            stitch_challan = row.get('CHALLAN NO', row.get('Stitching challan no', ''))
+            stitch_receive_date = parse_date(row.get('RECEIVE DATE FROM STITCHING ', row.get('RECEIVE DATE FROM STITCHING', row.get('Receive date from stitching', ''))))
+            stitch_pcs_received = safe_int(row.get('RECEIVED BACK NO OF PCS', row.get('Pcs received from stitching', 0)), None)
             
-            if stitch_fabricator and not pd.isna(stitch_fabricator):
+            if stitch_fabricator and not pd.isna(stitch_fabricator) and str(stitch_fabricator).strip():
                 existing_stitch = await db.stitching_stages.find_one({"lot_id": lot_id})
+                
+                # Generate challan number if not provided
+                challan_no = str(stitch_challan).strip() if stitch_challan and not pd.isna(stitch_challan) else None
+                if not challan_no:
+                    challan_no = await get_next_stitching_challan_no()
+                elif not challan_no.startswith('ST-'):
+                    challan_no = f"ST-{challan_no.zfill(3)}"
+                
                 stitch_data = {
                     "lot_id": lot_id,
-                    "stitching_fabricator_name": str(stitch_fabricator),
+                    "stitching_fabricator_name": str(stitch_fabricator).strip(),
                     "lot_issue_date_to_stitching": stitch_issue_date,
-                    "stitching_challan_no": str(row.get('Stitching challan no', row.get('STITCHING CHALLAN NO', ''))) if not pd.isna(row.get('Stitching challan no', row.get('STITCHING CHALLAN NO', ''))) else await get_next_stitching_challan_no(),
-                    "receive_date_from_stitching": parse_date(row.get('Receive date from stitching', row.get('RECEIVE DATE FROM STITCHING', ''))),
-                    "pcs_received_back_from_stitching": int(row.get('Pcs received from stitching', row.get('PCS RECEIVED FROM STITCHING', 0))) if not pd.isna(row.get('Pcs received from stitching', row.get('PCS RECEIVED FROM STITCHING', 0))) else None,
+                    "stitching_challan_no": challan_no,
+                    "receive_date_from_stitching": stitch_receive_date,
+                    "pcs_received_back_from_stitching": stitch_pcs_received,
                     "stitching_notes": "",
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
