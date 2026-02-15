@@ -1,26 +1,22 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { api } from "@/App";
 import { toast } from "sonner";
-import { cn, formatDate, getStatusClass, getStageClass } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { 
-  Scissors, 
   Search, 
   Plus, 
-  Filter, 
-  ChevronRight,
   Package,
-  Clock,
+  Scissors,
+  Settings2,
+  Droplets,
   CheckCircle2,
-  AlertCircle,
-  TrendingUp,
-  Layers,
-  FileSpreadsheet
+  LayoutGrid,
+  List,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -31,25 +27,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const StatCard = ({ title, value, icon: Icon, color, trend }) => (
-  <Card className="industrial-card">
-    <CardContent className="p-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">{title}</p>
-          <p className="text-3xl font-bold">{value}</p>
-          {trend && (
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3" /> {trend}
-            </p>
-          )}
-        </div>
-        <div className={cn("p-3 rounded-lg", color)}>
-          <Icon className="w-6 h-6" />
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+const StatCard = ({ title, value, icon: Icon, iconBg, iconColor }) => (
+  <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+    <div className={cn("p-3 rounded-lg", iconBg)}>
+      <Icon className={cn("w-6 h-6", iconColor)} />
+    </div>
+    <div>
+      <p className="text-3xl font-bold text-gray-800">{value}</p>
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+    </div>
+  </div>
 );
 
 export default function Dashboard() {
@@ -60,6 +47,7 @@ export default function Dashboard() {
   const [search, setSearch] = useState("");
   const [stageFilter, setStageFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState("table");
 
   useEffect(() => {
     fetchData();
@@ -85,109 +73,106 @@ export default function Dashboard() {
     }
   };
 
-  const handleRowClick = (lotId) => {
-    navigate(`/lot/${lotId}`);
+  const getStageStyle = (stage) => {
+    const styles = {
+      "Cutting": "bg-blue-100 text-blue-700 border-l-4 border-l-blue-500",
+      "Stitching": "bg-purple-100 text-purple-700 border-l-4 border-l-purple-500",
+      "Bartack": "bg-orange-100 text-orange-700 border-l-4 border-l-orange-500",
+      "Washing/Dyeing": "bg-cyan-100 text-cyan-700 border-l-4 border-l-cyan-500",
+      "Completed": "bg-green-100 text-green-700 border-l-4 border-l-green-500",
+    };
+    return styles[stage] || "bg-gray-100 text-gray-700";
+  };
+
+  const getStatusStyle = (status) => {
+    const styles = {
+      "Pending": "bg-amber-100 text-amber-700 border border-amber-300",
+      "In Progress": "bg-green-100 text-green-700 border border-green-300",
+      "Completed": "bg-blue-100 text-blue-700 border border-blue-300",
+      "Delayed": "bg-red-100 text-red-700 border border-red-300",
+    };
+    return styles[status] || "bg-gray-100 text-gray-700";
+  };
+
+  // Count lots by stage
+  const getStageCount = (stage) => {
+    if (!lots) return 0;
+    return lots.filter(lot => lot.current_stage === stage).length;
   };
 
   return (
-    <div className="space-y-6 animate-slide-in" data-testid="dashboard">
+    <div className="space-y-6" data-testid="dashboard">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold tracking-tight uppercase">Production Pipeline</h1>
-          <p className="text-muted-foreground mt-1">Track all lots from cutting to completion</p>
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-500 mt-1">Production pipeline overview</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate("/import-export")} data-testid="import-export-btn">
-            <FileSpreadsheet className="w-4 h-4 mr-2" />
-            Import/Export
-          </Button>
-          <Button onClick={() => navigate("/cutting/new")} data-testid="new-lot-btn">
-            <Plus className="w-4 h-4 mr-2" />
-            New Lot
-          </Button>
-        </div>
+        <Button 
+          onClick={() => navigate("/cutting/new")} 
+          className="bg-blue-600 hover:bg-blue-700"
+          data-testid="new-lot-btn"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          New Lot
+        </Button>
       </div>
 
-      {/* Stats */}
-      {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Total Lots"
-            value={stats.total_lots}
-            icon={Package}
-            color="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
-          />
-          <StatCard
-            title="Pending"
-            value={stats.pending}
-            icon={Clock}
-            color="bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-400"
-          />
-          <StatCard
-            title="In Progress"
-            value={stats.in_progress}
-            icon={Layers}
-            color="bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400"
-          />
-          <StatCard
-            title="Completed"
-            value={stats.completed}
-            icon={CheckCircle2}
-            color="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
-          />
-        </div>
-      )}
-
-      {/* Pipeline Visual */}
-      <Card className="industrial-card overflow-hidden">
-        <div className="h-2 pipeline-line" />
-        <CardContent className="p-4">
-          <div className="flex items-center justify-between text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
-              <span>Cutting</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
-              <span>Stitching</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-orange-500" />
-              <span>Bartack</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-cyan-500" />
-              <span>Washing</span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 rounded-full bg-emerald-500" />
-              <span>Completed</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <StatCard
+          title="Total Lots"
+          value={stats?.total_lots || lots.length}
+          icon={Package}
+          iconBg="bg-blue-100"
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          title="Cutting"
+          value={getStageCount("Cutting")}
+          icon={Scissors}
+          iconBg="bg-purple-100"
+          iconColor="text-purple-600"
+        />
+        <StatCard
+          title="Stitching/Bartack"
+          value={getStageCount("Stitching") + getStageCount("Bartack")}
+          icon={Settings2}
+          iconBg="bg-amber-100"
+          iconColor="text-amber-600"
+        />
+        <StatCard
+          title="Washing"
+          value={getStageCount("Washing/Dyeing")}
+          icon={Droplets}
+          iconBg="bg-cyan-100"
+          iconColor="text-cyan-600"
+        />
+        <StatCard
+          title="Completed"
+          value={getStageCount("Completed")}
+          icon={CheckCircle2}
+          iconBg="bg-green-100"
+          iconColor="text-green-600"
+        />
+      </div>
 
       {/* Filters */}
-      <Card className="industrial-card">
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by lot no, fabric, style..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-10"
-                data-testid="search-input"
-              />
-            </div>
+      <div className="bg-white rounded-xl shadow-sm border p-4">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="flex-1 relative w-full">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search lot, fabric, style, fabricator..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 bg-gray-50 border-gray-200"
+              data-testid="search-input"
+            />
+          </div>
+          <div className="flex gap-3 w-full md:w-auto">
             <Select value={stageFilter} onValueChange={setStageFilter}>
-              <SelectTrigger className="w-full md:w-48" data-testid="stage-filter">
+              <SelectTrigger className="w-full md:w-36 bg-gray-50 border-gray-200" data-testid="stage-filter">
                 <SelectValue placeholder="All Stages" />
               </SelectTrigger>
               <SelectContent>
@@ -200,39 +185,62 @@ export default function Dashboard() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-48" data-testid="status-filter">
-                <SelectValue placeholder="All Status" />
+              <SelectTrigger className="w-full md:w-36 bg-gray-50 border-gray-200" data-testid="status-filter">
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="Pending">Pending</SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
                 <SelectItem value="Completed">Completed</SelectItem>
                 <SelectItem value="Delayed">Delayed</SelectItem>
               </SelectContent>
             </Select>
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "px-3 h-8",
+                  viewMode === "table" ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                )}
+                onClick={() => setViewMode("table")}
+                data-testid="table-view-btn"
+              >
+                <List className="w-4 h-4 mr-1" />
+                Table
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "px-3 h-8",
+                  viewMode === "kanban" ? "bg-white shadow-sm" : "hover:bg-gray-200"
+                )}
+                onClick={() => setViewMode("kanban")}
+                data-testid="kanban-view-btn"
+              >
+                <LayoutGrid className="w-4 h-4 mr-1" />
+                Kanban
+              </Button>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Lots Table */}
-      <Card className="industrial-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-xl font-semibold uppercase tracking-wide">
-            Production Lots ({lots.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
+      {/* Content */}
+      {viewMode === "table" ? (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
           {loading ? (
             <div className="flex items-center justify-center h-64">
-              <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+              <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
             </div>
           ) : lots.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
-              <Scissors className="w-12 h-12 mb-4 opacity-50" />
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <Package className="w-12 h-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">No lots found</p>
               <p className="text-sm">Create a new lot to get started</p>
-              <Button className="mt-4" onClick={() => navigate("/cutting/new")}>
+              <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/cutting/new")}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create First Lot
               </Button>
@@ -241,61 +249,53 @@ export default function Dashboard() {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted/50">
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Date</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Lot No</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Pcs</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Fabric</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Style</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Stitching</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Bartack</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Washing</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Stage</TableHead>
-                    <TableHead className="font-bold uppercase text-xs tracking-wider">Status</TableHead>
+                  <TableRow className="bg-gray-50 border-b">
+                    <TableHead className="font-semibold text-gray-600">Lot No</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Date</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Pcs</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Fabric</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Style</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Fabricator</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Stage</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {lots.map((lot, idx) => (
+                  {lots.map((lot) => (
                     <TableRow
                       key={lot.id}
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => handleRowClick(lot.id)}
+                      className="hover:bg-gray-50 transition-colors cursor-pointer"
                       data-testid={`lot-row-${lot.lot_no}`}
-                      style={{ animationDelay: `${idx * 30}ms` }}
                     >
-                      <TableCell className="font-mono text-sm">{formatDate(lot.cutting_date)}</TableCell>
-                      <TableCell className="font-bold">{lot.lot_no}</TableCell>
-                      <TableCell>{lot.total_pcs_cut}</TableCell>
-                      <TableCell className="max-w-32 truncate">{lot.fabric_name}</TableCell>
-                      <TableCell>{lot.style}</TableCell>
-                      <TableCell className="text-xs">
-                        {lot.stitching ? (
-                          <div>
-                            <div className="font-medium">{lot.stitching.stitching_fabricator_name}</div>
-                            <div className="text-muted-foreground">{lot.stitching.stitching_challan_no}</div>
-                          </div>
-                        ) : "-"}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {lot.bartack ? lot.bartack.bartack_person_name : "-"}
-                      </TableCell>
-                      <TableCell className="text-xs">
-                        {lot.washing ? (
-                          <div>
-                            <div className="font-medium">{lot.washing.dyeing_person_firm_name}</div>
-                            <div className="text-muted-foreground">{lot.washing.washing_challan_no}</div>
-                          </div>
-                        ) : "-"}
+                      <TableCell className="font-semibold text-gray-800">{lot.lot_no}</TableCell>
+                      <TableCell className="text-gray-600">{formatDate(lot.cutting_date)}</TableCell>
+                      <TableCell className="text-gray-600">{lot.total_pcs_cut}</TableCell>
+                      <TableCell className="text-gray-600 max-w-32 truncate">{lot.fabric_name || "-"}</TableCell>
+                      <TableCell className="text-gray-600">{lot.style || "-"}</TableCell>
+                      <TableCell className="text-gray-600">
+                        {lot.stitching?.stitching_fabricator_name || "-"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn("text-xs", getStageClass(lot.current_stage))}>
+                        <span className={cn("px-2 py-1 rounded text-xs font-medium", getStageStyle(lot.current_stage))}>
                           {lot.current_stage}
-                        </Badge>
+                        </span>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn("text-xs border", getStatusClass(lot.overall_status))}>
+                        <span className={cn("px-2 py-1 rounded text-xs font-medium", getStatusStyle(lot.overall_status))}>
                           {lot.overall_status}
-                        </Badge>
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                          onClick={() => navigate(`/lot/${lot.id}`)}
+                          data-testid={`view-lot-${lot.lot_no}`}
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -303,8 +303,40 @@ export default function Dashboard() {
               </Table>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      ) : (
+        // Kanban View
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          {["Cutting", "Stitching", "Bartack", "Washing/Dyeing", "Completed"].map((stage) => (
+            <div key={stage} className="bg-white rounded-xl border p-4">
+              <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">
+                {stage} ({lots.filter(l => l.current_stage === stage).length})
+              </h3>
+              <div className="space-y-2">
+                {lots
+                  .filter((lot) => lot.current_stage === stage)
+                  .map((lot) => (
+                    <div
+                      key={lot.id}
+                      className="bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors border"
+                      onClick={() => navigate(`/lot/${lot.id}`)}
+                      data-testid={`kanban-lot-${lot.lot_no}`}
+                    >
+                      <p className="font-semibold text-gray-800 text-sm">{lot.lot_no}</p>
+                      <p className="text-xs text-gray-500 mt-1">{lot.style || "No style"}</p>
+                      <p className="text-xs text-gray-500">{lot.total_pcs_cut} pcs</p>
+                      <div className="mt-2">
+                        <span className={cn("px-2 py-0.5 rounded text-xs font-medium", getStatusStyle(lot.overall_status))}>
+                          {lot.overall_status}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
