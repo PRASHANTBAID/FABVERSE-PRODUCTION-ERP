@@ -101,13 +101,19 @@ export default function ChallanView() {
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div className="flex items-center gap-4">
-              <img 
-                src="https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg" 
-                alt="FABVERSE Logo" 
-                className="w-20 h-20 object-contain print:w-16 print:h-16"
-              />
+              {firmSettings.logo_url ? (
+                <img 
+                  src={firmSettings.logo_url} 
+                  alt={`${firmSettings.firm_name} Logo`}
+                  className="w-20 h-20 object-contain print:w-16 print:h-16"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-lg bg-primary flex items-center justify-center print:bg-black">
+                  <Factory className="w-10 h-10 text-primary-foreground print:text-white" />
+                </div>
+              )}
               <div>
-                <h1 className="text-3xl font-bold tracking-wider uppercase logo-text">FABVERSE</h1>
+                <h1 className="text-3xl font-bold tracking-wider uppercase logo-text">{firmSettings.firm_name}</h1>
                 <p className="text-sm text-muted-foreground print:text-gray-600">Garment Production</p>
               </div>
             </div>
@@ -125,11 +131,14 @@ export default function ChallanView() {
           <div className="grid grid-cols-2 gap-8 mb-8 p-4 bg-muted/30 rounded-lg print:bg-gray-100">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 print:text-gray-600">From</p>
-              <p className="font-bold text-lg">FABVERSE</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">Plot No. 2312, Lane No. 12</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">Raghubar Pura No. 2</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">Gandhi Nagar, Delhi - 31</p>
-              <p className="text-sm font-medium print:text-gray-700">Mobile: 9999994690</p>
+              <p className="font-bold text-lg">{firmSettings.firm_name}</p>
+              {firmSettings.address_line1 && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.address_line1}</p>}
+              {firmSettings.address_line2 && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.address_line2}</p>}
+              {firmSettings.address_line3 && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.address_line3}</p>}
+              {firmSettings.city_state_pin && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.city_state_pin}</p>}
+              {firmSettings.gst_number && <p className="text-sm text-muted-foreground print:text-gray-600">GST: {firmSettings.gst_number}</p>}
+              {firmSettings.mobile && <p className="text-sm font-medium print:text-gray-700">Mobile: {firmSettings.mobile}</p>}
+              {firmSettings.email && <p className="text-sm text-muted-foreground print:text-gray-600">Email: {firmSettings.email}</p>}
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 print:text-gray-600">To</p>
