@@ -50,8 +50,12 @@ export default function Login() {
       {/* Login Card */}
       <Card className="relative z-10 w-full max-w-md bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl" data-testid="login-card">
         <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto w-16 h-16 rounded-full bg-primary flex items-center justify-center">
-            <Factory className="w-8 h-8 text-primary-foreground" />
+          <div className="mx-auto">
+            <img 
+              src="https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg" 
+              alt="FABVERSE Logo" 
+              className="w-20 h-20 object-contain mx-auto"
+            />
           </div>
           <div>
             <CardTitle className="text-4xl font-bold tracking-wider uppercase logo-text" data-testid="app-title">
