@@ -1,22 +1,53 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { api } from "@/App";
 import { useAuth } from "@/App";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Key, User, Save } from "lucide-react";
+import { Settings as SettingsIcon, Key, User, Save, Building2, Upload, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Settings() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
+  const [savingFirm, setSavingFirm] = useState(false);
+  const [loadingFirm, setLoadingFirm] = useState(true);
+  
   const [passwords, setPasswords] = useState({
     old_password: "",
     new_password: "",
     confirm_password: "",
   });
+
+  const [firmSettings, setFirmSettings] = useState({
+    firm_name: "",
+    address_line1: "",
+    address_line2: "",
+    address_line3: "",
+    city_state_pin: "",
+    gst_number: "",
+    mobile: "",
+    email: "",
+    logo_url: "",
+  });
+
+  useEffect(() => {
+    fetchFirmSettings();
+  }, []);
+
+  const fetchFirmSettings = async () => {
+    try {
+      const response = await api.get("/settings/firm");
+      setFirmSettings(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch firm settings");
+    } finally {
+      setLoadingFirm(false);
+    }
+  };
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -46,146 +77,395 @@ export default function Settings() {
     }
   };
 
+  const handleSaveFirmSettings = async (e) => {
+    e.preventDefault();
+    setSavingFirm(true);
+    try {
+      await api.put("/settings/firm", firmSettings);
+      toast.success("Firm settings saved successfully");
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to save firm settings");
+    } finally {
+      setSavingFirm(false);
+    }
+  };
+
+  const handleFirmChange = (field, value) => {
+    setFirmSettings((prev) => ({ ...prev, [field]: value }));
+  };
+
   return (
-    <div className="max-w-2xl mx-auto space-y-6 animate-slide-in" data-testid="settings-page">
+    <div className="max-w-4xl mx-auto space-y-6 animate-slide-in" data-testid="settings-page">
       <div>
         <h1 className="text-4xl font-bold tracking-tight uppercase">Settings</h1>
-        <p className="text-muted-foreground mt-1">Manage your account settings</p>
+        <p className="text-muted-foreground mt-1">Manage your account and firm settings</p>
       </div>
 
-      {/* User Info */}
-      <Card className="industrial-card">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
-              <User className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <CardTitle className="text-lg uppercase tracking-wide">Account Info</CardTitle>
-              <CardDescription>Your account details</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Username</p>
-              <p className="text-lg font-medium">{user?.username}</p>
-            </div>
-            <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Role</p>
-              <p className="text-lg font-medium">Administrator</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="firm" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="firm" data-testid="firm-settings-tab">
+            <Building2 className="w-4 h-4 mr-2" />
+            Firm Details
+          </TabsTrigger>
+          <TabsTrigger value="account" data-testid="account-settings-tab">
+            <User className="w-4 h-4 mr-2" />
+            Account
+          </TabsTrigger>
+          <TabsTrigger value="about" data-testid="about-tab">
+            <SettingsIcon className="w-4 h-4 mr-2" />
+            About
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Change Password */}
-      <Card className="industrial-card">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-              <Key className="w-6 h-6 text-amber-600 dark:text-amber-400" />
-            </div>
-            <div>
-              <CardTitle className="text-lg uppercase tracking-wide">Change Password</CardTitle>
-              <CardDescription>Update your login password</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleChangePassword} className="space-y-6">
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Current Password
-              </Label>
-              <Input
-                type="password"
-                value={passwords.old_password}
-                onChange={(e) => setPasswords({ ...passwords, old_password: e.target.value })}
-                placeholder="Enter current password"
-                required
-                data-testid="old-password-input"
-              />
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                New Password
-              </Label>
-              <Input
-                type="password"
-                value={passwords.new_password}
-                onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })}
-                placeholder="Enter new password"
-                required
-                data-testid="new-password-input"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Confirm New Password
-              </Label>
-              <Input
-                type="password"
-                value={passwords.confirm_password}
-                onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })}
-                placeholder="Confirm new password"
-                required
-                data-testid="confirm-password-input"
-              />
-            </div>
-
-            <Button type="submit" disabled={saving} data-testid="change-password-btn">
-              {saving ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-                  Changing...
-                </span>
+        {/* Firm Details Tab */}
+        <TabsContent value="firm" className="space-y-6">
+          <Card className="industrial-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                  <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg uppercase tracking-wide">Firm Details</CardTitle>
+                  <CardDescription>These details will appear on all challans</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loadingFirm ? (
+                <div className="flex items-center justify-center h-32">
+                  <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                </div>
               ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Change Password
-                </>
-              )}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                <form onSubmit={handleSaveFirmSettings} className="space-y-6">
+                  {/* Logo Preview */}
+                  <div className="flex items-start gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Current Logo
+                      </Label>
+                      <div className="w-24 h-24 border rounded-lg overflow-hidden bg-muted/50 flex items-center justify-center">
+                        {firmSettings.logo_url ? (
+                          <img 
+                            src={firmSettings.logo_url} 
+                            alt="Firm Logo" 
+                            className="w-full h-full object-contain"
+                          />
+                        ) : (
+                          <Image className="w-8 h-8 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Logo URL
+                      </Label>
+                      <Input
+                        value={firmSettings.logo_url}
+                        onChange={(e) => handleFirmChange("logo_url", e.target.value)}
+                        placeholder="https://example.com/logo.png"
+                        data-testid="logo-url-input"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Enter a direct URL to your logo image (PNG, JPG)
+                      </p>
+                    </div>
+                  </div>
 
-      {/* App Info */}
-      <Card className="industrial-card">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
-              <SettingsIcon className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <div>
-              <CardTitle className="text-lg uppercase tracking-wide">About FABVERSE</CardTitle>
-              <CardDescription>Application information</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Application</span>
-              <span className="font-medium">FABVERSE ERP</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Version</span>
-              <span className="font-medium">1.0.0</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Type</span>
-              <span className="font-medium">Garment Production ERP</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                  <Separator />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Firm Name *
+                      </Label>
+                      <Input
+                        value={firmSettings.firm_name}
+                        onChange={(e) => handleFirmChange("firm_name", e.target.value)}
+                        placeholder="Your Firm Name"
+                        required
+                        data-testid="firm-name-input"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        GST Number
+                      </Label>
+                      <Input
+                        value={firmSettings.gst_number}
+                        onChange={(e) => handleFirmChange("gst_number", e.target.value)}
+                        placeholder="e.g., 07XXXXX1234X1Z5"
+                        data-testid="gst-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                      Address Line 1
+                    </Label>
+                    <Input
+                      value={firmSettings.address_line1}
+                      onChange={(e) => handleFirmChange("address_line1", e.target.value)}
+                      placeholder="Plot No., Lane No."
+                      data-testid="address1-input"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                      Address Line 2
+                    </Label>
+                    <Input
+                      value={firmSettings.address_line2}
+                      onChange={(e) => handleFirmChange("address_line2", e.target.value)}
+                      placeholder="Area, Locality"
+                      data-testid="address2-input"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                      Address Line 3 (Optional)
+                    </Label>
+                    <Input
+                      value={firmSettings.address_line3}
+                      onChange={(e) => handleFirmChange("address_line3", e.target.value)}
+                      placeholder="Additional address info"
+                      data-testid="address3-input"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                      City, State - PIN
+                    </Label>
+                    <Input
+                      value={firmSettings.city_state_pin}
+                      onChange={(e) => handleFirmChange("city_state_pin", e.target.value)}
+                      placeholder="e.g., Gandhi Nagar, Delhi - 110031"
+                      data-testid="city-input"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Mobile Number
+                      </Label>
+                      <Input
+                        value={firmSettings.mobile}
+                        onChange={(e) => handleFirmChange("mobile", e.target.value)}
+                        placeholder="e.g., 9999994690"
+                        data-testid="mobile-input"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                        Email (Optional)
+                      </Label>
+                      <Input
+                        type="email"
+                        value={firmSettings.email}
+                        onChange={(e) => handleFirmChange("email", e.target.value)}
+                        placeholder="contact@yourfirm.com"
+                        data-testid="email-input"
+                      />
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Preview */}
+                  <div className="p-4 bg-muted/30 rounded-lg">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">
+                      Challan Preview
+                    </p>
+                    <div className="flex items-start gap-4">
+                      {firmSettings.logo_url && (
+                        <img 
+                          src={firmSettings.logo_url} 
+                          alt="Logo" 
+                          className="w-16 h-16 object-contain"
+                        />
+                      )}
+                      <div className="text-sm">
+                        <p className="font-bold text-lg">{firmSettings.firm_name || "Your Firm Name"}</p>
+                        {firmSettings.address_line1 && <p className="text-muted-foreground">{firmSettings.address_line1}</p>}
+                        {firmSettings.address_line2 && <p className="text-muted-foreground">{firmSettings.address_line2}</p>}
+                        {firmSettings.address_line3 && <p className="text-muted-foreground">{firmSettings.address_line3}</p>}
+                        {firmSettings.city_state_pin && <p className="text-muted-foreground">{firmSettings.city_state_pin}</p>}
+                        {firmSettings.gst_number && <p className="text-muted-foreground">GST: {firmSettings.gst_number}</p>}
+                        {firmSettings.mobile && <p className="font-medium">Mobile: {firmSettings.mobile}</p>}
+                        {firmSettings.email && <p className="text-muted-foreground">Email: {firmSettings.email}</p>}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={savingFirm} data-testid="save-firm-btn">
+                    {savingFirm ? (
+                      <span className="flex items-center gap-2">
+                        <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                        Saving...
+                      </span>
+                    ) : (
+                      <>
+                        <Save className="w-4 h-4 mr-2" />
+                        Save Firm Details
+                      </>
+                    )}
+                  </Button>
+                </form>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Account Tab */}
+        <TabsContent value="account" className="space-y-6">
+          {/* User Info */}
+          <Card className="industrial-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center">
+                  <User className="w-6 h-6 text-primary-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg uppercase tracking-wide">Account Info</CardTitle>
+                  <CardDescription>Your account details</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Username</p>
+                  <p className="text-lg font-medium">{user?.username}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Role</p>
+                  <p className="text-lg font-medium">Administrator</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Change Password */}
+          <Card className="industrial-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
+                  <Key className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg uppercase tracking-wide">Change Password</CardTitle>
+                  <CardDescription>Update your login password</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleChangePassword} className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Current Password
+                  </Label>
+                  <Input
+                    type="password"
+                    value={passwords.old_password}
+                    onChange={(e) => setPasswords({ ...passwords, old_password: e.target.value })}
+                    placeholder="Enter current password"
+                    required
+                    data-testid="old-password-input"
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                    New Password
+                  </Label>
+                  <Input
+                    type="password"
+                    value={passwords.new_password}
+                    onChange={(e) => setPasswords({ ...passwords, new_password: e.target.value })}
+                    placeholder="Enter new password"
+                    required
+                    data-testid="new-password-input"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-widest text-muted-foreground">
+                    Confirm New Password
+                  </Label>
+                  <Input
+                    type="password"
+                    value={passwords.confirm_password}
+                    onChange={(e) => setPasswords({ ...passwords, confirm_password: e.target.value })}
+                    placeholder="Confirm new password"
+                    required
+                    data-testid="confirm-password-input"
+                  />
+                </div>
+
+                <Button type="submit" disabled={saving} data-testid="change-password-btn">
+                  {saving ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      Changing...
+                    </span>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Change Password
+                    </>
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* About Tab */}
+        <TabsContent value="about">
+          <Card className="industrial-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center">
+                  <SettingsIcon className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg uppercase tracking-wide">About FABVERSE</CardTitle>
+                  <CardDescription>Application information</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Application</span>
+                  <span className="font-medium">FABVERSE ERP</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Version</span>
+                  <span className="font-medium">1.0.0</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Type</span>
+                  <span className="font-medium">Garment Production ERP</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Stages</span>
+                  <span className="font-medium">Cutting → Stitching → Bartack → Washing</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
