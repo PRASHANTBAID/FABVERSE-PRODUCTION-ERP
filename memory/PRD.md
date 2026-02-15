@@ -34,14 +34,17 @@ Build a single-user garment production ERP app called "FABVERSE" that digitizes 
 
 ## What's Implemented (Feb 15, 2026)
 - Complete backend API with all CRUD operations
-- Login page with industrial factory background
+- Login page with industrial factory background and custom logo
 - Dashboard with stats cards and production table
 - Cutting form with rolls management and cost calculations
 - Stitching form with auto-challan generation
 - Bartack form
 - Washing form with auto-challan generation
 - Lot detail page with stage progression
-- Challan print view with firm details
+- **Challan print view with FABVERSE firm details:**
+  - Logo: Custom needle & thread logo
+  - Address: Plot No. 2312, Lane No. 12, Raghubar Pura No. 2, Gandhi Nagar, Delhi - 31
+  - Mobile: 9999994690
 - Excel import/export functionality
 - Reports page with charts (Recharts)
 - Settings page with password change
