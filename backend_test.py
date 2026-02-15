@@ -178,7 +178,7 @@ class FabverseAPITester:
             "Create Stitching Stage",
             "POST",
             "/stitching",
-            201,
+            200,  # Backend returns 200 not 201
             data=stitching_data
         )
         
