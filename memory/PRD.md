@@ -41,9 +41,11 @@ Build a single-user garment production ERP app called "FABVERSE" that digitizes 
 - Bartack form
 - Washing form with auto-challan generation
 - Lot detail page with stage progression
-- **Challan print view with dynamic firm details from settings**
+- **Challan view with PDF download and Print options**
 - Excel import/export functionality
-- Reports page with charts (Recharts)
+- **Reports page with charts and Excel export**
+  - Summary stats, Lots by Stage/Status, Fabric Usage, Stitching/Washing Load
+  - Export to Excel with multiple sheets
 - **Settings page with tabs:**
   - **Firm Details**: Logo URL, firm name, GST, address, mobile, email with live preview
   - **Account**: Password change
