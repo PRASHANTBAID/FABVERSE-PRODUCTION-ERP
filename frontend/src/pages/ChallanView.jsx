@@ -96,12 +96,14 @@ export default function ChallanView() {
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-lg bg-primary flex items-center justify-center print:bg-black">
-                <Factory className="w-8 h-8 text-primary-foreground print:text-white" />
-              </div>
+              <img 
+                src="https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg" 
+                alt="FABVERSE Logo" 
+                className="w-20 h-20 object-contain print:w-16 print:h-16"
+              />
               <div>
                 <h1 className="text-3xl font-bold tracking-wider uppercase logo-text">FABVERSE</h1>
-                <p className="text-sm text-muted-foreground print:text-gray-600">Garment Production ERP</p>
+                <p className="text-sm text-muted-foreground print:text-gray-600">Garment Production</p>
               </div>
             </div>
             <div className="text-right">
@@ -114,15 +116,15 @@ export default function ChallanView() {
             </div>
           </div>
 
-          {/* Firm Details Placeholder */}
+          {/* Firm Details */}
           <div className="grid grid-cols-2 gap-8 mb-8 p-4 bg-muted/30 rounded-lg print:bg-gray-100">
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 print:text-gray-600">From</p>
-              <p className="font-bold text-lg">Your Firm Name</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">Address Line 1</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">City, State - PIN</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">GST: XXXXXXXXXX</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">Contact: +91 XXXXXXXXXX</p>
+              <p className="font-bold text-lg">FABVERSE</p>
+              <p className="text-sm text-muted-foreground print:text-gray-600">Plot No. 2312, Lane No. 12</p>
+              <p className="text-sm text-muted-foreground print:text-gray-600">Raghubar Pura No. 2</p>
+              <p className="text-sm text-muted-foreground print:text-gray-600">Gandhi Nagar, Delhi - 31</p>
+              <p className="text-sm font-medium print:text-gray-700">Mobile: 9999994690</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 print:text-gray-600">To</p>
