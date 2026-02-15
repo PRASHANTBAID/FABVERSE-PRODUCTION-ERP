@@ -1,36 +1,32 @@
 import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth, useTheme } from "@/App";
+import { useAuth } from "@/App";
 import { cn } from "@/lib/utils";
 import {
-  Factory,
   LayoutDashboard,
-  Scissors,
-  FileSpreadsheet,
+  Package,
+  FileText,
   BarChart3,
-  Settings,
+  Upload,
+  Lock,
   LogOut,
-  Sun,
-  Moon,
   Menu,
   X,
-  ChevronLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 
 const navItems = [
   { path: "/", icon: LayoutDashboard, label: "Dashboard" },
-  { path: "/cutting/new", icon: Scissors, label: "New Lot" },
-  { path: "/import-export", icon: FileSpreadsheet, label: "Import/Export" },
+  { path: "/lots", icon: Package, label: "Lots" },
+  { path: "/challans", icon: FileText, label: "Challans" },
   { path: "/reports", icon: BarChart3, label: "Reports" },
-  { path: "/settings", icon: Settings, label: "Settings" },
+  { path: "/import-export", icon: Upload, label: "Import/Export" },
+  { path: "/change-password", icon: Lock, label: "Change Password" },
 ];
 
 const NavLink = ({ item, active, onClick }) => (
@@ -38,84 +34,72 @@ const NavLink = ({ item, active, onClick }) => (
     to={item.path}
     onClick={onClick}
     className={cn(
-      "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
+      "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 text-sm font-medium",
       active
-        ? "bg-primary text-primary-foreground"
-        : "hover:bg-muted text-muted-foreground hover:text-foreground"
+        ? "bg-[#1e3a5f] text-white"
+        : "text-blue-100 hover:bg-[#1e3a5f]/50 hover:text-white"
     )}
     data-testid={`nav-${item.label.toLowerCase().replace(/\s+/g, '-')}`}
   >
     <item.icon className="w-5 h-5" />
-    <span className="font-medium">{item.label}</span>
+    <span>{item.label}</span>
   </Link>
 );
 
 const Sidebar = ({ onNavigate }) => {
   const location = useLocation();
   const { logout, user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+
+  const isActive = (path) => {
+    if (path === "/") return location.pathname === "/";
+    return location.pathname.startsWith(path);
+  };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#1e3a8a]">
       {/* Logo */}
-      <div className="p-6 border-b border-border">
+      <div className="p-5 border-b border-blue-800/50">
         <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
-          <img 
-            src="https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg" 
-            alt="FABVERSE" 
-            className="w-10 h-10 object-contain"
-          />
-          <span className="text-2xl font-bold tracking-wider uppercase logo-text">FABVERSE</span>
+          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-xl">$</span>
+          </div>
+          <div>
+            <span className="text-xl font-bold text-white tracking-wide">FABVERSE</span>
+            <p className="text-xs text-blue-200">Production ERP</p>
+          </div>
         </Link>
       </div>
 
       {/* Navigation */}
-      <ScrollArea className="flex-1 px-4 py-6">
-        <nav className="space-y-2">
+      <ScrollArea className="flex-1 px-3 py-4">
+        <nav className="space-y-1">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               item={item}
-              active={location.pathname === item.path || 
-                (item.path === "/cutting/new" && location.pathname.startsWith("/cutting")) ||
-                (item.path === "/" && location.pathname.startsWith("/lot"))}
+              active={isActive(item.path)}
               onClick={onNavigate}
             />
           ))}
         </nav>
       </ScrollArea>
 
-      {/* Footer */}
-      <div className="p-4 border-t border-border space-y-3">
-        <div className="flex items-center justify-between px-2">
-          <span className="text-sm text-muted-foreground">Theme</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            data-testid="sidebar-theme-toggle"
-          >
-            {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </Button>
-        </div>
-        <Separator />
-        <div className="flex items-center gap-3 px-2 py-2">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-            {user?.username?.charAt(0).toUpperCase()}
+      {/* User Section */}
+      <div className="p-4 border-t border-blue-800/50">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+            {user?.username?.charAt(0).toUpperCase() || "A"}
           </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium">{user?.username}</p>
-            <p className="text-xs text-muted-foreground">Administrator</p>
-          </div>
+          <span className="text-white font-medium text-sm">{user?.username || "admin"}</span>
         </div>
         <Button
           variant="ghost"
-          className="w-full justify-start text-destructive hover:text-destructive hover:bg-destructive/10"
+          className="w-full justify-start text-blue-200 hover:text-white hover:bg-blue-800/50"
           onClick={logout}
           data-testid="logout-btn"
         >
           <LogOut className="w-4 h-4 mr-2" />
-          Sign Out
+          Logout
         </Button>
       </div>
     </div>
@@ -124,63 +108,37 @@ const Sidebar = ({ onNavigate }) => {
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
 
   const closeSidebar = () => setSidebarOpen(false);
 
-  // Get page title based on route
-  const getPageTitle = () => {
-    if (location.pathname === "/") return "Dashboard";
-    if (location.pathname.startsWith("/cutting")) return "Cutting";
-    if (location.pathname.startsWith("/lot")) return "Lot Details";
-    if (location.pathname.startsWith("/challan")) return "Challan";
-    if (location.pathname === "/import-export") return "Import / Export";
-    if (location.pathname === "/reports") return "Reports";
-    if (location.pathname === "/settings") return "Settings";
-    return "FABVERSE";
-  };
-
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-[#e8f4fc]">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 border-r border-border bg-card">
+      <aside className="hidden lg:flex lg:w-56 lg:flex-col lg:fixed lg:inset-y-0">
         <Sidebar onNavigate={closeSidebar} />
       </aside>
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-64">
+        <SheetContent side="left" className="p-0 w-56 border-0">
           <Sidebar onNavigate={closeSidebar} />
         </SheetContent>
       </Sheet>
 
       {/* Main Content */}
-      <div className="flex-1 lg:pl-64">
-        {/* Top Header */}
-        <header className="glass-header h-16 flex items-center gap-4 px-4 lg:px-6">
+      <div className="flex-1 lg:pl-56">
+        {/* Mobile Header */}
+        <header className="lg:hidden bg-[#1e3a8a] h-14 flex items-center px-4 sticky top-0 z-40">
           <Button
             variant="ghost"
             size="icon"
-            className="lg:hidden"
+            className="text-white hover:bg-blue-800"
             onClick={() => setSidebarOpen(true)}
             data-testid="mobile-menu-btn"
           >
             <Menu className="w-5 h-5" />
           </Button>
-
-          {location.pathname !== "/" && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(-1)}
-              data-testid="back-btn"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          )}
-
-          <h2 className="text-xl font-semibold uppercase tracking-wide">{getPageTitle()}</h2>
+          <span className="ml-3 text-white font-bold">FABVERSE</span>
         </header>
 
         {/* Page Content */}
