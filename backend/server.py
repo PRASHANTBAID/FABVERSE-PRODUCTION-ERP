@@ -1,15 +1,19 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI, APIRouter, HTTPException, Depends, UploadFile, File
+from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
+from pydantic import BaseModel, Field
+from typing import List, Optional
 import uuid
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, date
+import bcrypt
+import jwt
+import io
+import pandas as pd
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -19,54 +23,873 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Create the main app without a prefix
-app = FastAPI()
+# JWT Secret
+JWT_SECRET = os.environ.get('JWT_SECRET', 'fabverse-secret-key-2024')
+JWT_ALGORITHM = 'HS256'
 
-# Create a router with the /api prefix
+app = FastAPI(title="FABVERSE ERP API")
 api_router = APIRouter(prefix="/api")
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
+# ==================== MODELS ====================
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
+class TokenResponse(BaseModel):
+    token: str
+    username: str
+
+class CuttingRoll(BaseModel):
+    roll_no: str
+    meters_or_kgs: float
+
+class LotCreate(BaseModel):
+    lot_no: str
+    cutting_date: str
+    gender: str
+    sizes: str
+    style: str
+    fabric_name: str
+    fabric_grade: str = "Fresh"
+    dyeing_or_washing_instructions: str = ""
+    rolls: List[CuttingRoll] = []
+    total_pcs_cut: int = 0
+    fabric_price_per_meter_or_kg: float = 0.0
+    cutting_notes: str = ""
+
+class LotUpdate(BaseModel):
+    lot_no: Optional[str] = None
+    cutting_date: Optional[str] = None
+    gender: Optional[str] = None
+    sizes: Optional[str] = None
+    style: Optional[str] = None
+    fabric_name: Optional[str] = None
+    fabric_grade: Optional[str] = None
+    dyeing_or_washing_instructions: Optional[str] = None
+    rolls: Optional[List[CuttingRoll]] = None
+    total_pcs_cut: Optional[int] = None
+    fabric_price_per_meter_or_kg: Optional[float] = None
+    cutting_notes: Optional[str] = None
+
+class StitchingStageCreate(BaseModel):
+    lot_id: str
+    stitching_fabricator_name: str
+    lot_issue_date_to_stitching: str
+    stitching_notes: str = ""
+
+class StitchingStageUpdate(BaseModel):
+    stitching_fabricator_name: Optional[str] = None
+    lot_issue_date_to_stitching: Optional[str] = None
+    receive_date_from_stitching: Optional[str] = None
+    pcs_received_back_from_stitching: Optional[int] = None
+    stitching_notes: Optional[str] = None
+
+class BartackStageCreate(BaseModel):
+    lot_id: str
+    bartack_person_name: str
+    lot_issue_to_bartack_date: str
+    pcs_issued_to_bartack: int = 0
+    bartack_notes: str = ""
+
+class BartackStageUpdate(BaseModel):
+    bartack_person_name: Optional[str] = None
+    lot_issue_to_bartack_date: Optional[str] = None
+    pcs_issued_to_bartack: Optional[int] = None
+    bartack_notes: Optional[str] = None
+
+class WashingStageCreate(BaseModel):
+    lot_id: str
+    dyeing_person_firm_name: str
+    lot_issue_date_to_washing: str
+    pcs_issued_to_washing: int = 0
+    washing_notes: str = ""
+
+class WashingStageUpdate(BaseModel):
+    dyeing_person_firm_name: Optional[str] = None
+    lot_issue_date_to_washing: Optional[str] = None
+    pcs_issued_to_washing: Optional[int] = None
+    receive_date_from_washing: Optional[str] = None
+    pcs_received_back_from_washing: Optional[int] = None
+    washing_notes: Optional[str] = None
+
+# ==================== AUTH HELPERS ====================
+
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+def verify_password(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
+def create_token(username: str) -> str:
+    payload = {
+        'username': username,
+        'exp': datetime.now(timezone.utc).timestamp() + 86400 * 7  # 7 days
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+def verify_token(token: str) -> dict:
+    try:
+        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expired")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+async def get_current_user(authorization: str = None):
+    if not authorization:
+        raise HTTPException(status_code=401, detail="No authorization header")
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = verify_token(token)
+        return payload
+    except:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+# ==================== INIT ADMIN ====================
+
+async def init_admin():
+    admin = await db.users.find_one({"username": "admin"})
+    if not admin:
+        await db.users.insert_one({
+            "id": str(uuid.uuid4()),
+            "username": "admin",
+            "password": hash_password("admin"),
+            "created_at": datetime.now(timezone.utc).isoformat()
+        })
+        logger.info("Admin user created with default credentials")
+
+# ==================== AUTH ROUTES ====================
+
+@api_router.post("/auth/login", response_model=TokenResponse)
+async def login(request: LoginRequest):
+    user = await db.users.find_one({"username": request.username}, {"_id": 0})
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(request.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = create_token(user["username"])
+    return {"token": token, "username": user["username"]}
+
+@api_router.post("/auth/change-password")
+async def change_password(request: ChangePasswordRequest, authorization: str = None):
+    user_data = await get_current_user(authorization)
+    user = await db.users.find_one({"username": user_data["username"]})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if not verify_password(request.old_password, user["password"]):
+        raise HTTPException(status_code=400, detail="Old password is incorrect")
+    await db.users.update_one(
+        {"username": user_data["username"]},
+        {"$set": {"password": hash_password(request.new_password)}}
+    )
+    return {"message": "Password changed successfully"}
+
+@api_router.get("/auth/me")
+async def get_me(authorization: str = None):
+    user_data = await get_current_user(authorization)
+    return {"username": user_data["username"]}
+
+# ==================== LOT ROUTES ====================
+
+@api_router.post("/lots")
+async def create_lot(lot: LotCreate):
+    # Check for duplicate lot_no
+    existing = await db.lots.find_one({"lot_no": lot.lot_no})
+    if existing:
+        raise HTTPException(status_code=400, detail="Lot number already exists")
     
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    # Calculate totals
+    total_meters = sum(r.meters_or_kgs for r in lot.rolls)
+    avg_fabric = total_meters / lot.total_pcs_cut if lot.total_pcs_cut > 0 else 0
+    fabric_cost_per_pc = avg_fabric * lot.fabric_price_per_meter_or_kg
+    
+    lot_doc = {
+        "id": str(uuid.uuid4()),
+        "lot_no": lot.lot_no,
+        "cutting_date": lot.cutting_date,
+        "gender": lot.gender,
+        "sizes": lot.sizes,
+        "style": lot.style,
+        "fabric_name": lot.fabric_name,
+        "fabric_grade": lot.fabric_grade,
+        "dyeing_or_washing_instructions": lot.dyeing_or_washing_instructions,
+        "rolls": [r.model_dump() for r in lot.rolls],
+        "total_meters_or_kgs_used": total_meters,
+        "total_pcs_cut": lot.total_pcs_cut,
+        "avg_fabric_used_per_pc": round(avg_fabric, 4),
+        "fabric_price_per_meter_or_kg": lot.fabric_price_per_meter_or_kg,
+        "fabric_cost_per_pc": round(fabric_cost_per_pc, 2),
+        "cutting_notes": lot.cutting_notes,
+        "current_stage": "Cutting",
+        "overall_status": "Pending",
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.lots.insert_one(lot_doc)
+    lot_doc.pop("_id", None)
+    return lot_doc
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+@api_router.get("/lots")
+async def get_lots(
+    search: str = None,
+    stage: str = None,
+    status: str = None,
+    start_date: str = None,
+    end_date: str = None
+):
+    query = {}
+    
+    if search:
+        query["$or"] = [
+            {"lot_no": {"$regex": search, "$options": "i"}},
+            {"fabric_name": {"$regex": search, "$options": "i"}},
+            {"style": {"$regex": search, "$options": "i"}}
+        ]
+    
+    if stage:
+        query["current_stage"] = stage
+    
+    if status:
+        query["overall_status"] = status
+    
+    if start_date:
+        query["cutting_date"] = {"$gte": start_date}
+    
+    if end_date:
+        if "cutting_date" in query:
+            query["cutting_date"]["$lte"] = end_date
+        else:
+            query["cutting_date"] = {"$lte": end_date}
+    
+    lots = await db.lots.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    
+    # Fetch related stage data for each lot
+    for lot in lots:
+        lot_id = lot["id"]
+        
+        # Stitching
+        stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        lot["stitching"] = stitching
+        
+        # Bartack
+        bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        lot["bartack"] = bartack
+        
+        # Washing
+        washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        lot["washing"] = washing
+    
+    return lots
 
-# Add your routes to the router instead of directly to app
+@api_router.get("/lots/{lot_id}")
+async def get_lot(lot_id: str):
+    lot = await db.lots.find_one({"id": lot_id}, {"_id": 0})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    # Fetch related stages
+    lot["stitching"] = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+    lot["bartack"] = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+    lot["washing"] = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+    
+    return lot
+
+@api_router.put("/lots/{lot_id}")
+async def update_lot(lot_id: str, lot: LotUpdate):
+    existing = await db.lots.find_one({"id": lot_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    update_data = {k: v for k, v in lot.model_dump().items() if v is not None}
+    
+    # Recalculate if rolls or pcs changed
+    if "rolls" in update_data or "total_pcs_cut" in update_data:
+        rolls = update_data.get("rolls", existing.get("rolls", []))
+        total_pcs = update_data.get("total_pcs_cut", existing.get("total_pcs_cut", 0))
+        price = update_data.get("fabric_price_per_meter_or_kg", existing.get("fabric_price_per_meter_or_kg", 0))
+        
+        if isinstance(rolls[0], dict) if rolls else False:
+            total_meters = sum(r.get("meters_or_kgs", 0) for r in rolls)
+        else:
+            total_meters = sum(r.meters_or_kgs for r in rolls)
+        
+        avg_fabric = total_meters / total_pcs if total_pcs > 0 else 0
+        fabric_cost = avg_fabric * price
+        
+        update_data["total_meters_or_kgs_used"] = total_meters
+        update_data["avg_fabric_used_per_pc"] = round(avg_fabric, 4)
+        update_data["fabric_cost_per_pc"] = round(fabric_cost, 2)
+        
+        if "rolls" in update_data:
+            update_data["rolls"] = [r.model_dump() if hasattr(r, 'model_dump') else r for r in update_data["rolls"]]
+    
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.lots.update_one({"id": lot_id}, {"$set": update_data})
+    
+    updated = await db.lots.find_one({"id": lot_id}, {"_id": 0})
+    return updated
+
+@api_router.delete("/lots/{lot_id}")
+async def delete_lot(lot_id: str):
+    result = await db.lots.delete_one({"id": lot_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    # Delete related stages
+    await db.stitching_stages.delete_many({"lot_id": lot_id})
+    await db.bartack_stages.delete_many({"lot_id": lot_id})
+    await db.washing_stages.delete_many({"lot_id": lot_id})
+    await db.challans.delete_many({"lot_id": lot_id})
+    
+    return {"message": "Lot and related data deleted"}
+
+# ==================== STITCHING ROUTES ====================
+
+async def get_next_stitching_challan_no():
+    last = await db.challans.find({"challan_type": "Stitching"}).sort("challan_number", -1).limit(1).to_list(1)
+    if not last:
+        return "ST-001"
+    last_num = int(last[0]["challan_number"].split("-")[1])
+    return f"ST-{str(last_num + 1).zfill(3)}"
+
+@api_router.post("/stitching")
+async def create_stitching_stage(stage: StitchingStageCreate):
+    lot = await db.lots.find_one({"id": stage.lot_id})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    existing = await db.stitching_stages.find_one({"lot_id": stage.lot_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Stitching stage already exists for this lot")
+    
+    challan_no = await get_next_stitching_challan_no()
+    
+    stage_doc = {
+        "id": str(uuid.uuid4()),
+        "lot_id": stage.lot_id,
+        "stitching_fabricator_name": stage.stitching_fabricator_name,
+        "lot_issue_date_to_stitching": stage.lot_issue_date_to_stitching,
+        "stitching_challan_no": challan_no,
+        "receive_date_from_stitching": None,
+        "pcs_received_back_from_stitching": None,
+        "stitching_notes": stage.stitching_notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.stitching_stages.insert_one(stage_doc)
+    
+    # Create challan record
+    challan_doc = {
+        "challan_id": str(uuid.uuid4()),
+        "challan_type": "Stitching",
+        "challan_number": challan_no,
+        "lot_id": stage.lot_id,
+        "stage": "Stitching",
+        "issue_date": stage.lot_issue_date_to_stitching,
+        "recipient_name": stage.stitching_fabricator_name,
+        "pcs_issued": lot.get("total_pcs_cut", 0),
+        "notes_printed": stage.stitching_notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.challans.insert_one(challan_doc)
+    
+    # Update lot stage
+    await db.lots.update_one(
+        {"id": stage.lot_id},
+        {"$set": {"current_stage": "Stitching", "overall_status": "In Progress"}}
+    )
+    
+    stage_doc.pop("_id", None)
+    return stage_doc
+
+@api_router.put("/stitching/{lot_id}")
+async def update_stitching_stage(lot_id: str, stage: StitchingStageUpdate):
+    existing = await db.stitching_stages.find_one({"lot_id": lot_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Stitching stage not found")
+    
+    update_data = {k: v for k, v in stage.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.stitching_stages.update_one({"lot_id": lot_id}, {"$set": update_data})
+    
+    # If received, check if should move to Bartack
+    if stage.receive_date_from_stitching and stage.pcs_received_back_from_stitching:
+        await db.lots.update_one(
+            {"id": lot_id},
+            {"$set": {"current_stage": "Bartack"}}
+        )
+    
+    updated = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+    return updated
+
+# ==================== BARTACK ROUTES ====================
+
+@api_router.post("/bartack")
+async def create_bartack_stage(stage: BartackStageCreate):
+    lot = await db.lots.find_one({"id": stage.lot_id})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    existing = await db.bartack_stages.find_one({"lot_id": stage.lot_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Bartack stage already exists for this lot")
+    
+    stage_doc = {
+        "id": str(uuid.uuid4()),
+        "lot_id": stage.lot_id,
+        "bartack_person_name": stage.bartack_person_name,
+        "lot_issue_to_bartack_date": stage.lot_issue_to_bartack_date,
+        "pcs_issued_to_bartack": stage.pcs_issued_to_bartack,
+        "bartack_notes": stage.bartack_notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.bartack_stages.insert_one(stage_doc)
+    
+    # Update lot stage
+    await db.lots.update_one(
+        {"id": stage.lot_id},
+        {"$set": {"current_stage": "Bartack"}}
+    )
+    
+    stage_doc.pop("_id", None)
+    return stage_doc
+
+@api_router.put("/bartack/{lot_id}")
+async def update_bartack_stage(lot_id: str, stage: BartackStageUpdate):
+    existing = await db.bartack_stages.find_one({"lot_id": lot_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Bartack stage not found")
+    
+    update_data = {k: v for k, v in stage.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.bartack_stages.update_one({"lot_id": lot_id}, {"$set": update_data})
+    
+    updated = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+    return updated
+
+# ==================== WASHING/DYEING ROUTES ====================
+
+async def get_next_washing_challan_no():
+    last = await db.challans.find({"challan_type": "Washing"}).sort("challan_number", -1).limit(1).to_list(1)
+    if not last:
+        return "W-001"
+    last_num = int(last[0]["challan_number"].split("-")[1])
+    return f"W-{str(last_num + 1).zfill(3)}"
+
+@api_router.post("/washing")
+async def create_washing_stage(stage: WashingStageCreate):
+    lot = await db.lots.find_one({"id": stage.lot_id})
+    if not lot:
+        raise HTTPException(status_code=404, detail="Lot not found")
+    
+    existing = await db.washing_stages.find_one({"lot_id": stage.lot_id})
+    if existing:
+        raise HTTPException(status_code=400, detail="Washing stage already exists for this lot")
+    
+    # Get bartack person name for the challan
+    bartack = await db.bartack_stages.find_one({"lot_id": stage.lot_id})
+    bartack_person = bartack.get("bartack_person_name", "") if bartack else ""
+    
+    challan_no = await get_next_washing_challan_no()
+    
+    stage_doc = {
+        "id": str(uuid.uuid4()),
+        "lot_id": stage.lot_id,
+        "dyeing_person_firm_name": stage.dyeing_person_firm_name,
+        "lot_issue_date_to_washing": stage.lot_issue_date_to_washing,
+        "washing_challan_no": challan_no,
+        "pcs_issued_to_washing": stage.pcs_issued_to_washing,
+        "receive_date_from_washing": None,
+        "pcs_received_back_from_washing": None,
+        "washing_notes": stage.washing_notes,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.washing_stages.insert_one(stage_doc)
+    
+    # Create challan record with bartack person
+    challan_doc = {
+        "challan_id": str(uuid.uuid4()),
+        "challan_type": "Washing",
+        "challan_number": challan_no,
+        "lot_id": stage.lot_id,
+        "stage": "Washing",
+        "issue_date": stage.lot_issue_date_to_washing,
+        "recipient_name": stage.dyeing_person_firm_name,
+        "pcs_issued": stage.pcs_issued_to_washing,
+        "notes_printed": stage.washing_notes,
+        "bartack_person_name": bartack_person,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    await db.challans.insert_one(challan_doc)
+    
+    # Update lot stage
+    await db.lots.update_one(
+        {"id": stage.lot_id},
+        {"$set": {"current_stage": "Washing/Dyeing"}}
+    )
+    
+    stage_doc.pop("_id", None)
+    return stage_doc
+
+@api_router.put("/washing/{lot_id}")
+async def update_washing_stage(lot_id: str, stage: WashingStageUpdate):
+    existing = await db.washing_stages.find_one({"lot_id": lot_id})
+    if not existing:
+        raise HTTPException(status_code=404, detail="Washing stage not found")
+    
+    update_data = {k: v for k, v in stage.model_dump().items() if v is not None}
+    update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+    
+    await db.washing_stages.update_one({"lot_id": lot_id}, {"$set": update_data})
+    
+    # If received, mark as completed
+    if stage.receive_date_from_washing and stage.pcs_received_back_from_washing:
+        await db.lots.update_one(
+            {"id": lot_id},
+            {"$set": {"current_stage": "Completed", "overall_status": "Completed"}}
+        )
+    
+    updated = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+    return updated
+
+# ==================== CHALLAN ROUTES ====================
+
+@api_router.get("/challans")
+async def get_challans(challan_type: str = None, lot_id: str = None):
+    query = {}
+    if challan_type:
+        query["challan_type"] = challan_type
+    if lot_id:
+        query["lot_id"] = lot_id
+    
+    challans = await db.challans.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
+    return challans
+
+@api_router.get("/challans/{challan_id}")
+async def get_challan(challan_id: str):
+    challan = await db.challans.find_one({"challan_id": challan_id}, {"_id": 0})
+    if not challan:
+        raise HTTPException(status_code=404, detail="Challan not found")
+    
+    # Get lot details
+    lot = await db.lots.find_one({"id": challan["lot_id"]}, {"_id": 0})
+    challan["lot"] = lot
+    
+    return challan
+
+# ==================== EXCEL IMPORT/EXPORT ====================
+
+@api_router.post("/import/excel")
+async def import_excel(file: UploadFile = File(...)):
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(status_code=400, detail="Only Excel files are allowed")
+    
+    contents = await file.read()
+    df = pd.read_excel(io.BytesIO(contents))
+    
+    imported_count = 0
+    updated_count = 0
+    errors = []
+    
+    for idx, row in df.iterrows():
+        try:
+            lot_no = str(row.get('Lot No', row.get('LOT NO', row.get('lot_no', ''))))
+            if not lot_no or pd.isna(lot_no):
+                continue
+            
+            # Check if lot exists
+            existing = await db.lots.find_one({"lot_no": lot_no})
+            
+            # Parse dates safely
+            def parse_date(val):
+                if pd.isna(val) or val == '' or val is None:
+                    return None
+                if isinstance(val, datetime):
+                    return val.strftime('%Y-%m-%d')
+                if isinstance(val, date):
+                    return val.strftime('%Y-%m-%d')
+                return str(val)
+            
+            lot_data = {
+                "lot_no": lot_no,
+                "cutting_date": parse_date(row.get('Date', row.get('DATE', row.get('cutting_date', '')))),
+                "gender": str(row.get('Gender', row.get('GENDER', ''))),
+                "sizes": str(row.get('Size', row.get('SIZE', row.get('sizes', '')))),
+                "style": str(row.get('Style', row.get('STYLE', ''))),
+                "fabric_name": str(row.get('Fabric', row.get('FABRIC', row.get('fabric_name', '')))),
+                "fabric_grade": "Fresh",
+                "dyeing_or_washing_instructions": "",
+                "rolls": [],
+                "total_meters_or_kgs_used": 0,
+                "total_pcs_cut": int(row.get('Pcs', row.get('PCS', row.get('total_pcs_cut', 0)))) if not pd.isna(row.get('Pcs', row.get('PCS', row.get('total_pcs_cut', 0)))) else 0,
+                "avg_fabric_used_per_pc": 0,
+                "fabric_price_per_meter_or_kg": 0,
+                "fabric_cost_per_pc": 0,
+                "cutting_notes": "",
+                "current_stage": "Cutting",
+                "overall_status": "Pending",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            
+            if existing:
+                # Update existing lot
+                await db.lots.update_one({"lot_no": lot_no}, {"$set": lot_data})
+                updated_count += 1
+                lot_id = existing["id"]
+            else:
+                # Create new lot
+                lot_data["id"] = str(uuid.uuid4())
+                lot_data["created_at"] = datetime.now(timezone.utc).isoformat()
+                await db.lots.insert_one(lot_data)
+                imported_count += 1
+                lot_id = lot_data["id"]
+            
+            # Import stitching data
+            stitch_fabricator = row.get('Stitching fabricator', row.get('STITCHING FABRICATOR', ''))
+            stitch_issue_date = parse_date(row.get('Lot issue date to stitching', row.get('LOT ISSUE DATE TO STITCHING', '')))
+            
+            if stitch_fabricator and not pd.isna(stitch_fabricator):
+                existing_stitch = await db.stitching_stages.find_one({"lot_id": lot_id})
+                stitch_data = {
+                    "lot_id": lot_id,
+                    "stitching_fabricator_name": str(stitch_fabricator),
+                    "lot_issue_date_to_stitching": stitch_issue_date,
+                    "stitching_challan_no": str(row.get('Stitching challan no', row.get('STITCHING CHALLAN NO', ''))) if not pd.isna(row.get('Stitching challan no', row.get('STITCHING CHALLAN NO', ''))) else await get_next_stitching_challan_no(),
+                    "receive_date_from_stitching": parse_date(row.get('Receive date from stitching', row.get('RECEIVE DATE FROM STITCHING', ''))),
+                    "pcs_received_back_from_stitching": int(row.get('Pcs received from stitching', row.get('PCS RECEIVED FROM STITCHING', 0))) if not pd.isna(row.get('Pcs received from stitching', row.get('PCS RECEIVED FROM STITCHING', 0))) else None,
+                    "stitching_notes": "",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                if existing_stitch:
+                    await db.stitching_stages.update_one({"lot_id": lot_id}, {"$set": stitch_data})
+                else:
+                    stitch_data["id"] = str(uuid.uuid4())
+                    stitch_data["created_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.stitching_stages.insert_one(stitch_data)
+                
+                lot_data["current_stage"] = "Stitching"
+                lot_data["overall_status"] = "In Progress"
+            
+            # Import bartack data
+            bartack_person = row.get('Bartack person name', row.get('BARTACK PERSON NAME', ''))
+            bartack_date = parse_date(row.get('Lot issue to bartack date', row.get('LOT ISSUE TO BARTACK DATE', '')))
+            
+            if bartack_person and not pd.isna(bartack_person):
+                existing_bartack = await db.bartack_stages.find_one({"lot_id": lot_id})
+                bartack_data = {
+                    "lot_id": lot_id,
+                    "bartack_person_name": str(bartack_person),
+                    "lot_issue_to_bartack_date": bartack_date,
+                    "pcs_issued_to_bartack": int(row.get('Pcs issued to bartack', row.get('PCS ISSUED TO BARTACK', 0))) if not pd.isna(row.get('Pcs issued to bartack', row.get('PCS ISSUED TO BARTACK', 0))) else 0,
+                    "bartack_notes": "",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                if existing_bartack:
+                    await db.bartack_stages.update_one({"lot_id": lot_id}, {"$set": bartack_data})
+                else:
+                    bartack_data["id"] = str(uuid.uuid4())
+                    bartack_data["created_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.bartack_stages.insert_one(bartack_data)
+                
+                lot_data["current_stage"] = "Bartack"
+            
+            # Import washing data
+            washing_firm = row.get('Washing/dyeing firm name', row.get('WASHING/DYEING FIRM NAME', ''))
+            washing_issue_date = parse_date(row.get('Lot issue date to washing', row.get('LOT ISSUE DATE TO WASHING', '')))
+            
+            if washing_firm and not pd.isna(washing_firm):
+                existing_washing = await db.washing_stages.find_one({"lot_id": lot_id})
+                washing_data = {
+                    "lot_id": lot_id,
+                    "dyeing_person_firm_name": str(washing_firm),
+                    "lot_issue_date_to_washing": washing_issue_date,
+                    "washing_challan_no": str(row.get('Washing challan no', row.get('WASHING CHALLAN NO', ''))) if not pd.isna(row.get('Washing challan no', row.get('WASHING CHALLAN NO', ''))) else await get_next_washing_challan_no(),
+                    "pcs_issued_to_washing": int(row.get('Pcs issued to washing', row.get('PCS ISSUED TO WASHING', 0))) if not pd.isna(row.get('Pcs issued to washing', row.get('PCS ISSUED TO WASHING', 0))) else 0,
+                    "receive_date_from_washing": parse_date(row.get('Receive date from washing', row.get('RECEIVE DATE FROM WASHING', ''))),
+                    "pcs_received_back_from_washing": int(row.get('Pcs received from washing', row.get('PCS RECEIVED FROM WASHING', 0))) if not pd.isna(row.get('Pcs received from washing', row.get('PCS RECEIVED FROM WASHING', 0))) else None,
+                    "washing_notes": "",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+                
+                if existing_washing:
+                    await db.washing_stages.update_one({"lot_id": lot_id}, {"$set": washing_data})
+                else:
+                    washing_data["id"] = str(uuid.uuid4())
+                    washing_data["created_at"] = datetime.now(timezone.utc).isoformat()
+                    await db.washing_stages.insert_one(washing_data)
+                
+                lot_data["current_stage"] = "Washing/Dyeing"
+                
+                # Check if completed
+                if washing_data.get("receive_date_from_washing") and washing_data.get("pcs_received_back_from_washing"):
+                    lot_data["current_stage"] = "Completed"
+                    lot_data["overall_status"] = "Completed"
+            
+            # Update lot stage
+            await db.lots.update_one({"id": lot_id}, {"$set": {"current_stage": lot_data["current_stage"], "overall_status": lot_data["overall_status"]}})
+            
+        except Exception as e:
+            errors.append(f"Row {idx + 2}: {str(e)}")
+    
+    return {
+        "message": "Import completed",
+        "imported": imported_count,
+        "updated": updated_count,
+        "errors": errors
+    }
+
+@api_router.get("/export/excel")
+async def export_excel():
+    lots = await db.lots.find({}, {"_id": 0}).to_list(1000)
+    
+    export_data = []
+    for lot in lots:
+        lot_id = lot["id"]
+        stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        
+        row = {
+            "Date": lot.get("cutting_date", ""),
+            "Lot No": lot.get("lot_no", ""),
+            "Pcs": lot.get("total_pcs_cut", 0),
+            "Size": lot.get("sizes", ""),
+            "Fabric": lot.get("fabric_name", ""),
+            "Style": lot.get("style", ""),
+            "Stitching fabricator": stitching.get("stitching_fabricator_name", "") if stitching else "",
+            "Lot issue date to stitching": stitching.get("lot_issue_date_to_stitching", "") if stitching else "",
+            "Stitching challan no": stitching.get("stitching_challan_no", "") if stitching else "",
+            "Receive date from stitching": stitching.get("receive_date_from_stitching", "") if stitching else "",
+            "Pcs received from stitching": stitching.get("pcs_received_back_from_stitching", "") if stitching else "",
+            "Lot issue to bartack date": bartack.get("lot_issue_to_bartack_date", "") if bartack else "",
+            "Bartack person name": bartack.get("bartack_person_name", "") if bartack else "",
+            "Pcs issued to bartack": bartack.get("pcs_issued_to_bartack", "") if bartack else "",
+            "Washing/dyeing firm name": washing.get("dyeing_person_firm_name", "") if washing else "",
+            "Lot issue date to washing": washing.get("lot_issue_date_to_washing", "") if washing else "",
+            "Washing challan no": washing.get("washing_challan_no", "") if washing else "",
+            "Pcs issued to washing": washing.get("pcs_issued_to_washing", "") if washing else "",
+            "Receive date from washing": washing.get("receive_date_from_washing", "") if washing else "",
+            "Pcs received from washing": washing.get("pcs_received_back_from_washing", "") if washing else "",
+            "Current Stage": lot.get("current_stage", ""),
+            "Overall Status": lot.get("overall_status", "")
+        }
+        export_data.append(row)
+    
+    df = pd.DataFrame(export_data)
+    
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Production Data')
+    output.seek(0)
+    
+    return StreamingResponse(
+        output,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=fabverse_export.xlsx"}
+    )
+
+# ==================== REPORTS ====================
+
+@api_router.get("/reports/summary")
+async def get_reports_summary():
+    # Lots by stage
+    pipeline_stage = [
+        {"$group": {"_id": "$current_stage", "count": {"$sum": 1}}}
+    ]
+    stage_counts = await db.lots.aggregate(pipeline_stage).to_list(100)
+    
+    # Lots by status
+    pipeline_status = [
+        {"$group": {"_id": "$overall_status", "count": {"$sum": 1}}}
+    ]
+    status_counts = await db.lots.aggregate(pipeline_status).to_list(100)
+    
+    # Total lots
+    total_lots = await db.lots.count_documents({})
+    
+    # Total pcs
+    pipeline_pcs = [
+        {"$group": {"_id": None, "total": {"$sum": "$total_pcs_cut"}}}
+    ]
+    total_pcs_result = await db.lots.aggregate(pipeline_pcs).to_list(1)
+    total_pcs = total_pcs_result[0]["total"] if total_pcs_result else 0
+    
+    # Fabric usage by type
+    pipeline_fabric = [
+        {"$group": {"_id": "$fabric_name", "total_meters": {"$sum": "$total_meters_or_kgs_used"}, "total_cost": {"$sum": {"$multiply": ["$total_meters_or_kgs_used", "$fabric_price_per_meter_or_kg"]}}}}
+    ]
+    fabric_usage = await db.lots.aggregate(pipeline_fabric).to_list(100)
+    
+    # Stitching fabricator load
+    pipeline_stitch = [
+        {"$group": {"_id": "$stitching_fabricator_name", "count": {"$sum": 1}}}
+    ]
+    stitch_load = await db.stitching_stages.aggregate(pipeline_stitch).to_list(100)
+    
+    # Washing firm load
+    pipeline_wash = [
+        {"$group": {"_id": "$dyeing_person_firm_name", "count": {"$sum": 1}}}
+    ]
+    wash_load = await db.washing_stages.aggregate(pipeline_wash).to_list(100)
+    
+    return {
+        "total_lots": total_lots,
+        "total_pcs": total_pcs,
+        "by_stage": {item["_id"]: item["count"] for item in stage_counts if item["_id"]},
+        "by_status": {item["_id"]: item["count"] for item in status_counts if item["_id"]},
+        "fabric_usage": [{"fabric": item["_id"], "meters": item["total_meters"], "cost": item["total_cost"]} for item in fabric_usage if item["_id"]],
+        "stitching_load": [{"fabricator": item["_id"], "lots": item["count"]} for item in stitch_load if item["_id"]],
+        "washing_load": [{"firm": item["_id"], "lots": item["count"]} for item in wash_load if item["_id"]]
+    }
+
+# ==================== DASHBOARD STATS ====================
+
+@api_router.get("/dashboard/stats")
+async def get_dashboard_stats():
+    total_lots = await db.lots.count_documents({})
+    pending = await db.lots.count_documents({"overall_status": "Pending"})
+    in_progress = await db.lots.count_documents({"overall_status": "In Progress"})
+    completed = await db.lots.count_documents({"overall_status": "Completed"})
+    
+    # Recent lots
+    recent = await db.lots.find({}, {"_id": 0}).sort("created_at", -1).limit(5).to_list(5)
+    
+    return {
+        "total_lots": total_lots,
+        "pending": pending,
+        "in_progress": in_progress,
+        "completed": completed,
+        "recent_lots": recent
+    }
+
+# ==================== ROOT ====================
+
 @api_router.get("/")
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "FABVERSE ERP API", "version": "1.0.0"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
+@api_router.get("/health")
+async def health():
+    return {"status": "healthy"}
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
-
-# Include the router in the main app
+# Include router and middleware
 app.include_router(api_router)
 
 app.add_middleware(
@@ -77,12 +900,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
+@app.on_event("startup")
+async def startup():
+    await init_admin()
+    logger.info("FABVERSE ERP API started")
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
