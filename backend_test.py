@@ -6,7 +6,7 @@ import json
 from datetime import datetime
 
 class FabverseAPITester:
-    def __init__(self, base_url="https://fresh-start-208.preview.emergentagent.com/api"):
+    def __init__(self, base_url="https://production-hub-78.preview.emergentagent.com/api"):
         self.base_url = base_url
         self.token = None
         self.tests_run = 0
