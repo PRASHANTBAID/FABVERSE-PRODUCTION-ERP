@@ -22,7 +22,10 @@ export default function ChallanView() {
   const fetchChallanData = async () => {
     try {
       // Parse challanId format: "stitching-{lotId}" or "washing-{lotId}"
-      const [type, lotId] = challanId.split("-");
+      // lotId is a UUID so we need to split only on first hyphen
+      const firstHyphen = challanId.indexOf("-");
+      const type = challanId.substring(0, firstHyphen);
+      const lotId = challanId.substring(firstHyphen + 1);
       
       const lotRes = await api.get(`/lots/${lotId}`);
       setLot(lotRes.data);
