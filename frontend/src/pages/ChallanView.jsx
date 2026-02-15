@@ -229,63 +229,63 @@ export default function ChallanView() {
               <p className="font-bold text-lg text-gray-900">{formatDate(challan.issue_date)}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-600">Lot No</p>
-              <p className="font-bold text-lg">{lot.lot_no}</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Lot No</p>
+              <p className="font-bold text-lg text-gray-900">{lot.lot_no}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-600">Stage</p>
-              <p className="font-bold text-lg">{challan.type}</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Stage</p>
+              <p className="font-bold text-lg text-gray-900">{challan.type}</p>
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-600">Pieces</p>
-              <p className="font-bold text-lg">{challan.pcs_issued}</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Pieces</p>
+              <p className="font-bold text-lg text-gray-900">{challan.pcs_issued}</p>
             </div>
           </div>
 
           {/* Product Details */}
-          <div className="border rounded-lg overflow-hidden mb-8 print:border-gray-300">
+          <div className="border border-gray-300 rounded-lg overflow-hidden mb-8">
             <table className="w-full">
-              <thead className="bg-muted print:bg-gray-200">
+              <thead className="bg-gray-200">
                 <tr>
-                  <th className="text-left p-3 text-xs uppercase tracking-widest font-bold">Item</th>
-                  <th className="text-left p-3 text-xs uppercase tracking-widest font-bold">Details</th>
+                  <th className="text-left p-3 text-xs uppercase tracking-widest font-bold text-gray-700">Item</th>
+                  <th className="text-left p-3 text-xs uppercase tracking-widest font-bold text-gray-700">Details</th>
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-t print:border-gray-300">
-                  <td className="p-3 font-medium">Style</td>
-                  <td className="p-3">{lot.style || "-"}</td>
+                <tr className="border-t border-gray-300">
+                  <td className="p-3 font-medium text-gray-700">Style</td>
+                  <td className="p-3 text-gray-900">{lot.style || "-"}</td>
                 </tr>
-                <tr className="border-t print:border-gray-300 bg-muted/30 print:bg-gray-50">
-                  <td className="p-3 font-medium">Fabric</td>
-                  <td className="p-3">{lot.fabric_name || "-"}</td>
+                <tr className="border-t border-gray-300 bg-gray-50">
+                  <td className="p-3 font-medium text-gray-700">Fabric</td>
+                  <td className="p-3 text-gray-900">{lot.fabric_name || "-"}</td>
                 </tr>
-                <tr className="border-t print:border-gray-300">
-                  <td className="p-3 font-medium">Fabric Grade</td>
-                  <td className="p-3">{lot.fabric_grade || "-"}</td>
+                <tr className="border-t border-gray-300">
+                  <td className="p-3 font-medium text-gray-700">Fabric Grade</td>
+                  <td className="p-3 text-gray-900">{lot.fabric_grade || "-"}</td>
                 </tr>
-                <tr className="border-t print:border-gray-300 bg-muted/30 print:bg-gray-50">
-                  <td className="p-3 font-medium">Gender</td>
-                  <td className="p-3">{lot.gender || "-"}</td>
+                <tr className="border-t border-gray-300 bg-gray-50">
+                  <td className="p-3 font-medium text-gray-700">Gender</td>
+                  <td className="p-3 text-gray-900">{lot.gender || "-"}</td>
                 </tr>
-                <tr className="border-t print:border-gray-300">
-                  <td className="p-3 font-medium">Sizes</td>
-                  <td className="p-3">{lot.sizes || "-"}</td>
+                <tr className="border-t border-gray-300">
+                  <td className="p-3 font-medium text-gray-700">Sizes</td>
+                  <td className="p-3 text-gray-900">{lot.sizes || "-"}</td>
                 </tr>
-                <tr className="border-t print:border-gray-300 bg-muted/30 print:bg-gray-50">
-                  <td className="p-3 font-medium">Total Pieces</td>
-                  <td className="p-3 font-bold text-lg">{challan.pcs_issued}</td>
+                <tr className="border-t border-gray-300 bg-gray-50">
+                  <td className="p-3 font-medium text-gray-700">Total Pieces</td>
+                  <td className="p-3 font-bold text-lg text-gray-900">{challan.pcs_issued}</td>
                 </tr>
                 {challan.type === "Washing" && challan.bartack_person && (
-                  <tr className="border-t print:border-gray-300">
-                    <td className="p-3 font-medium">Bartack Done By</td>
-                    <td className="p-3 font-bold text-primary print:text-black">{challan.bartack_person}</td>
+                  <tr className="border-t border-gray-300">
+                    <td className="p-3 font-medium text-gray-700">Bartack Done By</td>
+                    <td className="p-3 font-bold text-blue-700">{challan.bartack_person}</td>
                   </tr>
                 )}
                 {lot.dyeing_or_washing_instructions && (
-                  <tr className="border-t print:border-gray-300 bg-muted/30 print:bg-gray-50">
-                    <td className="p-3 font-medium">Washing Instructions</td>
-                    <td className="p-3">{lot.dyeing_or_washing_instructions}</td>
+                  <tr className="border-t border-gray-300 bg-gray-50">
+                    <td className="p-3 font-medium text-gray-700">Washing Instructions</td>
+                    <td className="p-3 text-gray-900">{lot.dyeing_or_washing_instructions}</td>
                   </tr>
                 )}
               </tbody>
