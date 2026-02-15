@@ -48,6 +48,17 @@ class TokenResponse(BaseModel):
     token: str
     username: str
 
+class FirmSettings(BaseModel):
+    firm_name: str = "FABVERSE"
+    address_line1: str = ""
+    address_line2: str = ""
+    address_line3: str = ""
+    city_state_pin: str = ""
+    gst_number: str = ""
+    mobile: str = ""
+    email: str = ""
+    logo_url: str = ""
+
 class CuttingRoll(BaseModel):
     roll_no: str
     meters_or_kgs: float
