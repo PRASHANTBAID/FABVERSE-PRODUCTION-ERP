@@ -63,8 +63,18 @@ Based on user reference images, the following UI changes were implemented:
 - Search bar with placeholder
 - Stage filter dropdown
 - Status filter dropdown
-- Table/Kanban view toggle
+- **Table/Kanban view toggle**
 - Data table with columns: Lot No, Date, Pcs, Fabric, Style, Fabricator, Stage, Status, Actions
+
+### Kanban Drag-and-Drop Feature (NEW)
+- 5 columns: Cutting, Stitching, Bartack, Washing/Dyeing, Completed
+- Each column shows lot count
+- Lot cards display: lot_no, style, pcs count, status badge
+- Drag handles (GripVertical icons) on each card
+- Drag lots between columns to change their production stage
+- Status auto-updates: Cutting→Pending, Middle stages→In Progress, Completed→Completed
+- Backend endpoint: PUT /api/lots/{lot_id}/stage
+- Library: @dnd-kit for drag-and-drop functionality
 
 ### Lots Page
 - Title: "Lots" with subtitle "Manage all production lots"
