@@ -854,29 +854,28 @@ async def export_excel():
         bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
         washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
         
+        # Match your Excel format exactly
         row = {
-            "Date": lot.get("cutting_date", ""),
-            "Lot No": lot.get("lot_no", ""),
-            "Pcs": lot.get("total_pcs_cut", 0),
-            "Size": lot.get("sizes", ""),
-            "Fabric": lot.get("fabric_name", ""),
-            "Style": lot.get("style", ""),
-            "Stitching fabricator": stitching.get("stitching_fabricator_name", "") if stitching else "",
-            "Lot issue date to stitching": stitching.get("lot_issue_date_to_stitching", "") if stitching else "",
-            "Stitching challan no": stitching.get("stitching_challan_no", "") if stitching else "",
-            "Receive date from stitching": stitching.get("receive_date_from_stitching", "") if stitching else "",
-            "Pcs received from stitching": stitching.get("pcs_received_back_from_stitching", "") if stitching else "",
-            "Lot issue to bartack date": bartack.get("lot_issue_to_bartack_date", "") if bartack else "",
-            "Bartack person name": bartack.get("bartack_person_name", "") if bartack else "",
-            "Pcs issued to bartack": bartack.get("pcs_issued_to_bartack", "") if bartack else "",
-            "Washing/dyeing firm name": washing.get("dyeing_person_firm_name", "") if washing else "",
-            "Lot issue date to washing": washing.get("lot_issue_date_to_washing", "") if washing else "",
-            "Washing challan no": washing.get("washing_challan_no", "") if washing else "",
-            "Pcs issued to washing": washing.get("pcs_issued_to_washing", "") if washing else "",
-            "Receive date from washing": washing.get("receive_date_from_washing", "") if washing else "",
-            "Pcs received from washing": washing.get("pcs_received_back_from_washing", "") if washing else "",
-            "Current Stage": lot.get("current_stage", ""),
-            "Overall Status": lot.get("overall_status", "")
+            "DATE": lot.get("cutting_date", ""),
+            "LOT NO": lot.get("lot_no", ""),
+            "PCS": lot.get("total_pcs_cut", 0),
+            "SIZE": lot.get("sizes", ""),
+            "FABRIC": lot.get("fabric_name", ""),
+            "STYLE": lot.get("style", ""),
+            "STITCHING ": stitching.get("stitching_fabricator_name", "") if stitching else "",
+            "LOT ISSUE DATE": stitching.get("lot_issue_date_to_stitching", "") if stitching else "",
+            "CHALLAN NO": stitching.get("stitching_challan_no", "") if stitching else "",
+            "RECEIVE DATE FROM STITCHING ": stitching.get("receive_date_from_stitching", "") if stitching else "",
+            "RECEIVED BACK NO OF PCS": stitching.get("pcs_received_back_from_stitching", "") if stitching else "",
+            "LOT ISSUE TO BARTACK DATE": bartack.get("lot_issue_to_bartack_date", "") if bartack else "",
+            "BARTACK FABRICATOR NAME": bartack.get("bartack_person_name", "") if bartack else "",
+            "NO OF PCS ISSUED TO BARTACK PERSON": bartack.get("pcs_issued_to_bartack", "") if bartack else "",
+            "WASHING/DYEING PERSON FIRM NAME": washing.get("dyeing_person_firm_name", "") if washing else "",
+            "LOT ISSUE DATE.1": washing.get("lot_issue_date_to_washing", "") if washing else "",
+            "CHALLAN NO.1": washing.get("washing_challan_no", "") if washing else "",
+            "PCS.1": washing.get("pcs_issued_to_washing", "") if washing else "",
+            "RECEIVE DATE FROM DYEING ": washing.get("receive_date_from_washing", "") if washing else "",
+            "PCS RCVD BACK FROM DYEING": washing.get("pcs_received_back_from_washing", "") if washing else "",
         }
         export_data.append(row)
     
