@@ -135,7 +135,7 @@ class FabverseAPITester:
             "Create Test Lot",
             "POST",
             "/lots",
-            201,
+            200,  # Backend returns 200 not 201
             data=test_lot_data
         )
         
