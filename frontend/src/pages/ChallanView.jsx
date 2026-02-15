@@ -177,55 +177,56 @@ export default function ChallanView() {
                 <img 
                   src={firmSettings.logo_url} 
                   alt={`${firmSettings.firm_name} Logo`}
-                  className="w-20 h-20 object-contain print:w-16 print:h-16"
+                  className="w-20 h-20 object-contain"
+                  crossOrigin="anonymous"
                 />
               ) : (
-                <div className="w-20 h-20 rounded-lg bg-primary flex items-center justify-center print:bg-black">
-                  <Factory className="w-10 h-10 text-primary-foreground print:text-white" />
+                <div className="w-20 h-20 rounded-lg bg-gray-800 flex items-center justify-center">
+                  <Factory className="w-10 h-10 text-white" />
                 </div>
               )}
               <div>
-                <h1 className="text-3xl font-bold tracking-wider uppercase logo-text">{firmSettings.firm_name}</h1>
-                <p className="text-sm text-muted-foreground print:text-gray-600">Garment Production</p>
+                <h1 className="text-3xl font-bold tracking-wider uppercase logo-text text-gray-900">{firmSettings.firm_name}</h1>
+                <p className="text-sm text-gray-500">Garment Production</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-600">
+              <p className="text-xs uppercase tracking-widest text-gray-500">
                 {challan.type} Challan
               </p>
-              <p className="text-3xl font-bold text-primary print:text-black mt-1">
+              <p className="text-3xl font-bold text-gray-900 mt-1">
                 {challan.challan_number}
               </p>
             </div>
           </div>
 
           {/* Firm Details */}
-          <div className="grid grid-cols-2 gap-8 mb-8 p-4 bg-muted/30 rounded-lg print:bg-gray-100">
+          <div className="grid grid-cols-2 gap-8 mb-8 p-4 bg-gray-100 rounded-lg">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 print:text-gray-600">From</p>
-              <p className="font-bold text-lg">{firmSettings.firm_name}</p>
-              {firmSettings.address_line1 && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.address_line1}</p>}
-              {firmSettings.address_line2 && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.address_line2}</p>}
-              {firmSettings.address_line3 && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.address_line3}</p>}
-              {firmSettings.city_state_pin && <p className="text-sm text-muted-foreground print:text-gray-600">{firmSettings.city_state_pin}</p>}
-              {firmSettings.gst_number && <p className="text-sm text-muted-foreground print:text-gray-600">GST: {firmSettings.gst_number}</p>}
-              {firmSettings.mobile && <p className="text-sm font-medium print:text-gray-700">Mobile: {firmSettings.mobile}</p>}
-              {firmSettings.email && <p className="text-sm text-muted-foreground print:text-gray-600">Email: {firmSettings.email}</p>}
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">From</p>
+              <p className="font-bold text-lg text-gray-900">{firmSettings.firm_name}</p>
+              {firmSettings.address_line1 && <p className="text-sm text-gray-600">{firmSettings.address_line1}</p>}
+              {firmSettings.address_line2 && <p className="text-sm text-gray-600">{firmSettings.address_line2}</p>}
+              {firmSettings.address_line3 && <p className="text-sm text-gray-600">{firmSettings.address_line3}</p>}
+              {firmSettings.city_state_pin && <p className="text-sm text-gray-600">{firmSettings.city_state_pin}</p>}
+              {firmSettings.gst_number && <p className="text-sm text-gray-600">GST: {firmSettings.gst_number}</p>}
+              {firmSettings.mobile && <p className="text-sm font-medium text-gray-700">Mobile: {firmSettings.mobile}</p>}
+              {firmSettings.email && <p className="text-sm text-gray-600">Email: {firmSettings.email}</p>}
             </div>
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground mb-2 print:text-gray-600">To</p>
-              <p className="font-bold text-lg">{challan.recipient_name}</p>
-              <p className="text-sm text-muted-foreground print:text-gray-600">{challan.type} Partner</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500 mb-2">To</p>
+              <p className="font-bold text-lg text-gray-900">{challan.recipient_name}</p>
+              <p className="text-sm text-gray-600">{challan.type} Partner</p>
             </div>
           </div>
 
-          <Separator className="my-6 print:border-gray-300" />
+          <Separator className="my-6 border-gray-300" />
 
           {/* Challan Details */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             <div>
-              <p className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-600">Date</p>
-              <p className="font-bold text-lg">{formatDate(challan.issue_date)}</p>
+              <p className="text-xs uppercase tracking-widest text-gray-500">Date</p>
+              <p className="font-bold text-lg text-gray-900">{formatDate(challan.issue_date)}</p>
             </div>
             <div>
               <p className="text-xs uppercase tracking-widest text-muted-foreground print:text-gray-600">Lot No</p>
