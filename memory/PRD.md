@@ -41,13 +41,13 @@ Build a single-user garment production ERP app called "FABVERSE" that digitizes 
 - Bartack form
 - Washing form with auto-challan generation
 - Lot detail page with stage progression
-- **Challan print view with FABVERSE firm details:**
-  - Logo: Custom needle & thread logo
-  - Address: Plot No. 2312, Lane No. 12, Raghubar Pura No. 2, Gandhi Nagar, Delhi - 31
-  - Mobile: 9999994690
+- **Challan print view with dynamic firm details from settings**
 - Excel import/export functionality
 - Reports page with charts (Recharts)
-- Settings page with password change
+- **Settings page with tabs:**
+  - **Firm Details**: Logo URL, firm name, GST, address, mobile, email with live preview
+  - **Account**: Password change
+  - **About**: App info
 - Dark/Light theme support
 - Responsive design for desktop and tablet
 
