@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { api } from "@/App";
+import { api, API } from "@/App";
 import { toast } from "sonner";
-import { BarChart3, PieChart, TrendingUp, Users, Factory, Package } from "lucide-react";
+import { BarChart3, PieChart, TrendingUp, Users, Factory, Package, Download, Loader2, FileSpreadsheet } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   BarChart,
@@ -21,6 +22,7 @@ const COLORS = ["#3b82f6", "#8b5cf6", "#f97316", "#06b6d4", "#10b981", "#ef4444"
 
 export default function Reports() {
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [data, setData] = useState(null);
 
   useEffect(() => {
@@ -35,6 +37,36 @@ export default function Reports() {
       toast.error("Failed to fetch reports");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExportReports = async () => {
+    setExporting(true);
+    try {
+      const token = localStorage.getItem("fabverse_token");
+      const response = await fetch(`${API}/reports/export`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Export failed");
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fabverse_reports_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
+
+      toast.success("Reports exported successfully");
+    } catch (error) {
+      toast.error("Failed to export reports");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -63,9 +95,28 @@ export default function Reports() {
 
   return (
     <div className="space-y-6 animate-slide-in" data-testid="reports-page">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight uppercase">Reports & Analytics</h1>
-        <p className="text-muted-foreground mt-1">Production insights and statistics</p>
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-4xl font-bold tracking-tight uppercase">Reports & Analytics</h1>
+          <p className="text-muted-foreground mt-1">Production insights and statistics</p>
+        </div>
+        <Button 
+          onClick={handleExportReports} 
+          disabled={exporting}
+          data-testid="export-reports-btn"
+        >
+          {exporting ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Exporting...
+            </>
+          ) : (
+            <>
+              <FileSpreadsheet className="w-4 h-4 mr-2" />
+              Export to Excel
+            </>
+          )}
+        </Button>
       </div>
 
       {/* Summary Cards */}
