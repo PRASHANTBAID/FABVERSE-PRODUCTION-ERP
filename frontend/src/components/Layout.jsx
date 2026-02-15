@@ -60,9 +60,11 @@ const Sidebar = ({ onNavigate }) => {
       {/* Logo */}
       <div className="p-6 border-b border-border">
         <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
-          <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-            <Factory className="w-6 h-6 text-primary-foreground" />
-          </div>
+          <img 
+            src="https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg" 
+            alt="FABVERSE" 
+            className="w-10 h-10 object-contain"
+          />
           <span className="text-2xl font-bold tracking-wider uppercase logo-text">FABVERSE</span>
         </Link>
       </div>
