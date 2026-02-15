@@ -759,17 +759,19 @@ async def import_excel(file: UploadFile = File(...)):
                 lot_data["current_stage"] = "Stitching"
                 lot_data["overall_status"] = "In Progress"
             
-            # Import bartack data
-            bartack_person = row.get('Bartack person name', row.get('BARTACK PERSON NAME', ''))
-            bartack_date = parse_date(row.get('Lot issue to bartack date', row.get('LOT ISSUE TO BARTACK DATE', '')))
+            # Import bartack data - matching your Excel columns
+            # Your columns: 'LOT ISSUE TO BARTACK DATE', 'BARTACK FABRICATOR NAME', 'NO OF PCS ISSUED TO BARTACK PERSON'
+            bartack_person = row.get('BARTACK FABRICATOR NAME', row.get('Bartack person name', ''))
+            bartack_date = parse_date(row.get('LOT ISSUE TO BARTACK DATE', row.get('Lot issue to bartack date', '')))
+            bartack_pcs = safe_int(row.get('NO OF PCS ISSUED TO BARTACK PERSON', row.get('Pcs issued to bartack', 0)))
             
-            if bartack_person and not pd.isna(bartack_person):
+            if bartack_person and not pd.isna(bartack_person) and str(bartack_person).strip():
                 existing_bartack = await db.bartack_stages.find_one({"lot_id": lot_id})
                 bartack_data = {
                     "lot_id": lot_id,
-                    "bartack_person_name": str(bartack_person),
+                    "bartack_person_name": str(bartack_person).strip(),
                     "lot_issue_to_bartack_date": bartack_date,
-                    "pcs_issued_to_bartack": int(row.get('Pcs issued to bartack', row.get('PCS ISSUED TO BARTACK', 0))) if not pd.isna(row.get('Pcs issued to bartack', row.get('PCS ISSUED TO BARTACK', 0))) else 0,
+                    "pcs_issued_to_bartack": bartack_pcs,
                     "bartack_notes": "",
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
@@ -783,20 +785,33 @@ async def import_excel(file: UploadFile = File(...)):
                 
                 lot_data["current_stage"] = "Bartack"
             
-            # Import washing data
-            washing_firm = row.get('Washing/dyeing firm name', row.get('WASHING/DYEING FIRM NAME', ''))
-            washing_issue_date = parse_date(row.get('Lot issue date to washing', row.get('LOT ISSUE DATE TO WASHING', '')))
+            # Import washing data - matching your Excel columns
+            # Your columns: 'WASHING/DYEING PERSON FIRM NAME', 'LOT ISSUE DATE.1', 'CHALLAN NO.1', 'PCS.1', 'RECEIVE DATE FROM DYEING ', 'PCS RCVD BACK FROM DYEING'
+            washing_firm = row.get('WASHING/DYEING PERSON FIRM NAME', row.get('Washing/dyeing firm name', ''))
+            washing_issue_date = parse_date(row.get('LOT ISSUE DATE.1', row.get('Lot issue date to washing', '')))
+            washing_challan = row.get('CHALLAN NO.1', row.get('Washing challan no', ''))
+            washing_pcs = safe_int(row.get('PCS.1', row.get('Pcs issued to washing', 0)))
+            washing_receive_date = parse_date(row.get('RECEIVE DATE FROM DYEING ', row.get('RECEIVE DATE FROM DYEING', row.get('Receive date from washing', ''))))
+            washing_pcs_received = safe_int(row.get('PCS RCVD BACK FROM DYEING', row.get('Pcs received from washing', 0)), None)
             
-            if washing_firm and not pd.isna(washing_firm):
+            if washing_firm and not pd.isna(washing_firm) and str(washing_firm).strip():
                 existing_washing = await db.washing_stages.find_one({"lot_id": lot_id})
+                
+                # Generate challan number if not provided
+                w_challan_no = str(washing_challan).strip() if washing_challan and not pd.isna(washing_challan) else None
+                if not w_challan_no:
+                    w_challan_no = await get_next_washing_challan_no()
+                elif not w_challan_no.startswith('W-'):
+                    w_challan_no = f"W-{w_challan_no.zfill(3)}"
+                
                 washing_data = {
                     "lot_id": lot_id,
-                    "dyeing_person_firm_name": str(washing_firm),
+                    "dyeing_person_firm_name": str(washing_firm).strip(),
                     "lot_issue_date_to_washing": washing_issue_date,
-                    "washing_challan_no": str(row.get('Washing challan no', row.get('WASHING CHALLAN NO', ''))) if not pd.isna(row.get('Washing challan no', row.get('WASHING CHALLAN NO', ''))) else await get_next_washing_challan_no(),
-                    "pcs_issued_to_washing": int(row.get('Pcs issued to washing', row.get('PCS ISSUED TO WASHING', 0))) if not pd.isna(row.get('Pcs issued to washing', row.get('PCS ISSUED TO WASHING', 0))) else 0,
-                    "receive_date_from_washing": parse_date(row.get('Receive date from washing', row.get('RECEIVE DATE FROM WASHING', ''))),
-                    "pcs_received_back_from_washing": int(row.get('Pcs received from washing', row.get('PCS RECEIVED FROM WASHING', 0))) if not pd.isna(row.get('Pcs received from washing', row.get('PCS RECEIVED FROM WASHING', 0))) else None,
+                    "washing_challan_no": w_challan_no,
+                    "pcs_issued_to_washing": washing_pcs,
+                    "receive_date_from_washing": washing_receive_date,
+                    "pcs_received_back_from_washing": washing_pcs_received,
                     "washing_notes": "",
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }
