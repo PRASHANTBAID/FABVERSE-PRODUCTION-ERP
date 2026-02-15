@@ -194,7 +194,7 @@ async def change_password(request: ChangePasswordRequest, authorization: str = H
     return {"message": "Password changed successfully"}
 
 @api_router.get("/auth/me")
-async def get_me(authorization: str = None):
+async def get_me(authorization: str = Header(None)):
     user_data = await get_current_user(authorization)
     return {"username": user_data["username"]}
 
