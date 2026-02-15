@@ -168,6 +168,6 @@ Based on user reference images, the following UI changes were implemented:
 3. Implement delayed lot detection
 
 ## Testing
-- Backend tests: /app/backend/tests/test_fabverse_api.py
-- Test reports: /app/test_reports/iteration_2.json
-- All tests passing (100% success rate)
+- Backend tests: /app/backend/tests/test_fabverse_api.py, /app/backend/tests/test_kanban_stage_api.py
+- Test reports: /app/test_reports/iteration_2.json, /app/test_reports/iteration_3.json
+- All tests passing (100% success rate for both backend and frontend)
