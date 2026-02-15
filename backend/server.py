@@ -180,7 +180,7 @@ async def login(request: LoginRequest):
     return {"token": token, "username": user["username"]}
 
 @api_router.post("/auth/change-password")
-async def change_password(request: ChangePasswordRequest, authorization: str = None):
+async def change_password(request: ChangePasswordRequest, authorization: str = Header(None)):
     user_data = await get_current_user(authorization)
     user = await db.users.find_one({"username": user_data["username"]})
     if not user:
