@@ -14,9 +14,11 @@ export default function ChallanView() {
   const { challanId } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState(false);
   const [challan, setChallan] = useState(null);
   const [lot, setLot] = useState(null);
   const [firmSettings, setFirmSettings] = useState(null);
+  const challanRef = useRef(null);
 
   useEffect(() => {
     fetchChallanData();
