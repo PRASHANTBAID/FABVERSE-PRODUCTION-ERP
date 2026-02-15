@@ -141,14 +141,34 @@ export default function ChallanView() {
         <h1 className="text-2xl font-bold uppercase tracking-wide">
           {challan.type} Challan
         </h1>
-        <Button onClick={handlePrint} data-testid="print-challan-btn">
-          <Printer className="w-4 h-4 mr-2" />
-          Print Challan
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handleDownloadPDF} 
+            disabled={downloading}
+            data-testid="download-pdf-btn"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Download PDF
+              </>
+            )}
+          </Button>
+          <Button onClick={handlePrint} data-testid="print-challan-btn">
+            <Printer className="w-4 h-4 mr-2" />
+            Print
+          </Button>
+        </div>
       </div>
 
       {/* Challan Document */}
-      <Card className="industrial-card print:shadow-none print:border-2 print:border-black">
+      <Card ref={challanRef} className="industrial-card print:shadow-none print:border-2 print:border-black bg-white dark:bg-white text-black">
         <CardContent className="p-8 print:p-6">
           {/* Header */}
           <div className="flex justify-between items-start mb-8">
