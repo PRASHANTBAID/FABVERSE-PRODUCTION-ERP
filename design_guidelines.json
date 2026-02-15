@@ -1,0 +1,170 @@
+{
+  "identity": {
+    "name": "FABVERSE",
+    "description": "Industrial Garment Production ERP",
+    "tone": "Industrial, Precision, Efficient, Robust",
+    "archetype": "The Performance Pro"
+  },
+  "typography": {
+    "primary_font": "Inter",
+    "secondary_font": "Barlow Condensed",
+    "heading_font": "Barlow Condensed",
+    "body_font": "Inter",
+    "mono_font": "JetBrains Mono",
+    "scale": {
+      "h1": "text-4xl md:text-5xl font-bold tracking-tight uppercase",
+      "h2": "text-3xl font-semibold tracking-tight uppercase",
+      "h3": "text-2xl font-semibold tracking-tight",
+      "h4": "text-xl font-medium tracking-wide",
+      "body": "text-base font-normal leading-relaxed",
+      "small": "text-sm font-medium tracking-wide text-muted-foreground",
+      "label": "text-xs font-bold uppercase tracking-widest text-muted-foreground"
+    }
+  },
+  "colors": {
+    "light_theme": {
+      "background": "#F8FAFC",
+      "foreground": "#0F172A",
+      "card": "#FFFFFF",
+      "card_foreground": "#0F172A",
+      "popover": "#FFFFFF",
+      "popover_foreground": "#0F172A",
+      "primary": "#0F172A",
+      "primary_foreground": "#F8FAFC",
+      "secondary": "#E2E8F0",
+      "secondary_foreground": "#0F172A",
+      "muted": "#F1F5F9",
+      "muted_foreground": "#64748B",
+      "accent": "#F1F5F9",
+      "accent_foreground": "#0F172A",
+      "destructive": "#EF4444",
+      "destructive_foreground": "#F8FAFC",
+      "border": "#E2E8F0",
+      "input": "#E2E8F0",
+      "ring": "#0F172A"
+    },
+    "dark_theme": {
+      "background": "#020617",
+      "foreground": "#F8FAFC",
+      "card": "#0F172A",
+      "card_foreground": "#F8FAFC",
+      "popover": "#0F172A",
+      "popover_foreground": "#F8FAFC",
+      "primary": "#F8FAFC",
+      "primary_foreground": "#020617",
+      "secondary": "#1E293B",
+      "secondary_foreground": "#F8FAFC",
+      "muted": "#1E293B",
+      "muted_foreground": "#94A3B8",
+      "accent": "#1E293B",
+      "accent_foreground": "#F8FAFC",
+      "destructive": "#7F1D1D",
+      "destructive_foreground": "#F8FAFC",
+      "border": "#1E293B",
+      "input": "#1E293B",
+      "ring": "#D1D5DB"
+    },
+    "status": {
+      "completed": {
+        "bg": "bg-emerald-100 dark:bg-emerald-900/30",
+        "text": "text-emerald-700 dark:text-emerald-400",
+        "border": "border-emerald-200 dark:border-emerald-800"
+      },
+      "in_progress": {
+        "bg": "bg-amber-100 dark:bg-amber-900/30",
+        "text": "text-amber-700 dark:text-amber-400",
+        "border": "border-amber-200 dark:border-amber-800"
+      },
+      "delayed": {
+        "bg": "bg-rose-100 dark:bg-rose-900/30",
+        "text": "text-rose-700 dark:text-rose-400",
+        "border": "border-rose-200 dark:border-rose-800"
+      }
+    }
+  },
+  "layout_strategies": {
+    "dashboard": {
+      "grid_type": "bento_dense",
+      "columns": "grid-cols-1 md:grid-cols-4 lg:grid-cols-6",
+      "gap": "gap-4",
+      "padding": "p-4 md:p-6",
+      "description": "High density grid for production tracking. No wasted space."
+    },
+    "forms": {
+      "container": "max-w-4xl mx-auto",
+      "grid": "grid grid-cols-1 md:grid-cols-2 gap-6",
+      "style": "clean_industrial",
+      "description": "Clear labels, high contrast inputs, focused grouping."
+    }
+  },
+  "visual_enhancers": {
+    "borders": "1px solid border-border",
+    "shadows": "shadow-sm hover:shadow-md transition-shadow duration-200",
+    "radius": "rounded-none md:rounded-sm",
+    "textures": {
+      "name": "Subtle Grain",
+      "css": "bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"
+    }
+  },
+  "components": {
+    "MetricCard": {
+      "path": "/src/components/dashboard/MetricCard.js",
+      "style": "bg-card border border-border p-6 relative overflow-hidden group hover:border-primary/50 transition-colors"
+    },
+    "StatusBadge": {
+      "path": "/src/components/ui/StatusBadge.js",
+      "style": "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border"
+    },
+    "ChallanTable": {
+      "path": "/src/components/production/ChallanTable.js",
+      "style": "w-full text-sm text-left border-collapse"
+    }
+  },
+  "image_urls": {
+    "login_background": {
+      "url": "https://images.unsplash.com/photo-1660980041852-230420b8f99f?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBnYXJtZW50JTIwZmFjdG9yeSUyMGludGVyaW9yfGVufDB8fHx8MTc3MTExNjA2M3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Industrial machinery room for login backdrop",
+      "category": "background"
+    },
+    "cutting_module": {
+      "url": "https://images.unsplash.com/photo-1632932580949-3182167aaebb?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDJ8MHwxfHNlYXJjaHw0fHxyb2xscyUyMG9mJTIwZmFicmljJTIwdGV4dGlsZSUyMGZhY3Rvcnl8ZW58MHx8fHwxNzcxMTE2MDY0fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Fabric rolls for Cutting module header",
+      "category": "header"
+    },
+    "stitching_module": {
+      "url": "https://images.unsplash.com/photo-1625479144604-ae69462778b7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDQ2NDN8MHwxfHNlYXJjaHwyfHxpbmR1c3RyaWFsJTIwc2V3aW5nJTIwbWFjaGluZSUyMGNsb3NldXB8ZW58MHx8fHwxNzcxMTE2MDY1fDA&ixlib=rb-4.1.0&q=85",
+      "description": "Silver sewing machine for Stitching module",
+      "category": "header"
+    },
+    "washing_module": {
+      "url": "https://images.unsplash.com/photo-1770795263583-e2abd887aedc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMzN8MHwxfHNlYXJjaHw0fHxkZW5pbSUyMGZhYnJpYyUyMHRleHR1cmUlMjBibHVlfGVufDB8fHx8MTc3MTExNjA2N3ww&ixlib=rb-4.1.0&q=85",
+      "description": "Denim texture for Washing/Dyeing module",
+      "category": "header"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Install 'lucide-react', 'recharts', 'date-fns', 'clsx', 'tailwind-merge' if not present.",
+    "Ensure 'Barlow Condensed' font is loaded from Google Fonts for headings.",
+    "Implement a ThemeProvider for Dark/Light mode toggle.",
+    "Use 'sonner' for all toast notifications.",
+    "Ensure all forms have validation (use react-hook-form + zod).",
+    "Dashboard must show a pipeline view: Cutting -> Stitching -> Bartack -> Washing.",
+    "Each lot card in the pipeline must show current status color-coded.",
+    "Challan numbers must auto-increment (mock logic if backend not ready).",
+    "Use the provided image URLs for section headers to give visual context.",
+    "Login page should use the login_background image with a dark overlay."
+  ],
+  "universal_guidelines": [
+    "Dark colors look good when used independently without gradients.",
+    "Don't make generic centered layouts.",
+    "Create depth through layered design elements with z-index hierarchy.",
+    "Use glass-morphism effects with backdrop filters (12-24px blur) for sticky headers.",
+    "Every interaction needs micro-animations - hover states, transitions.",
+    "Use 2-3x more spacing than feels comfortable.",
+    "Subtle grain textures, noise overlays, custom cursors, selection states.",
+    "Component Reuse: Prioritize using pre-existing components from src/components/ui.",
+    "Export Conventions: Components MUST use named exports.",
+    "Toasts: Use 'sonner' for toasts.",
+    "Use data-testid attributes for all interactive elements."
+  ]
+}
