@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/App";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
-import { FileText, Printer, Download, Factory } from "lucide-react";
+import { FileText, Printer, Download, Factory, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 export default function ChallanView() {
   const { challanId } = useParams();
