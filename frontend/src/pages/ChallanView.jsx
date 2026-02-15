@@ -14,6 +14,7 @@ export default function ChallanView() {
   const [loading, setLoading] = useState(true);
   const [challan, setChallan] = useState(null);
   const [lot, setLot] = useState(null);
+  const [firmSettings, setFirmSettings] = useState(null);
 
   useEffect(() => {
     fetchChallanData();
@@ -21,6 +22,10 @@ export default function ChallanView() {
 
   const fetchChallanData = async () => {
     try {
+      // Fetch firm settings
+      const firmRes = await api.get("/settings/firm");
+      setFirmSettings(firmRes.data);
+
       // Parse challanId format: "stitching-{lotId}" or "washing-{lotId}"
       // lotId is a UUID so we need to split only on first hyphen
       const firstHyphen = challanId.indexOf("-");
@@ -73,7 +78,7 @@ export default function ChallanView() {
     );
   }
 
-  if (!challan || !lot) {
+  if (!challan || !lot || !firmSettings) {
     return null;
   }
 
