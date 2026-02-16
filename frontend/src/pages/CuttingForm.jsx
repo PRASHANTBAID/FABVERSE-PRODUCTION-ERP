@@ -29,7 +29,7 @@ export default function CuttingForm() {
   const [formData, setFormData] = useState({
     lot_no: "",
     cutting_date: getTodayDate(),
-    gender: "Male",
+    gender: "Mens",
     sizes: "",
     style: "",
     fabric_name: "",
