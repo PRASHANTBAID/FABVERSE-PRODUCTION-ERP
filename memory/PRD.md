@@ -127,6 +127,9 @@ Based on user reference images, the following UI changes were implemented:
 - ✅ Excel import/export functionality
 - ✅ Reports page with charts and Excel export
 - ✅ Change Password page
+- ✅ **Gender field restricted to Mens/Womens/Kids**
+- ✅ **Turnaround time metrics** (avg days between stages)
+- ✅ **Delayed lots detection** (stuck in stage > 7 days)
 
 ## API Endpoints
 - POST /api/auth/login
