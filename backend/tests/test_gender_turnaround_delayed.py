@@ -136,8 +136,8 @@ class TestGenderValidation:
         response = requests.post(f"{BASE_URL}/api/lots", json=lot_data)
         assert response.status_code == 422, f"Expected 422 but got {response.status_code}"
 
-    def test_gender_empty_rejected(self):
-        """Test that empty string gender is rejected"""
+    def test_gender_empty_accepted(self):
+        """Test that empty string gender is accepted (for backward compatibility)"""
         lot_data = {
             "lot_no": f"TEST-GENDER-EMPTY-{datetime.now().strftime('%H%M%S%f')}",
             "cutting_date": "2024-12-01",
@@ -151,8 +151,12 @@ class TestGenderValidation:
             "fabric_price_per_meter_or_kg": 100
         }
         response = requests.post(f"{BASE_URL}/api/lots", json=lot_data)
-        # Empty string should be rejected
-        assert response.status_code == 422, f"Expected 422 but got {response.status_code}"
+        # Empty string is accepted (for backward compatibility with imported data)
+        assert response.status_code == 200, f"Expected 200 but got {response.status_code}"
+        data = response.json()
+        assert data["gender"] == ""
+        # Cleanup
+        requests.delete(f"{BASE_URL}/api/lots/{data['id']}")
 
 
 class TestTurnaroundTimeAPI:
