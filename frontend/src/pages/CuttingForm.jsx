@@ -60,7 +60,7 @@ export default function CuttingForm() {
       setFormData({
         lot_no: lot.lot_no || "",
         cutting_date: lot.cutting_date || getTodayDate(),
-        gender: lot.gender || "Male",
+        gender: lot.gender || "Mens",
         sizes: lot.sizes || "",
         style: lot.style || "",
         fabric_name: lot.fabric_name || "",
