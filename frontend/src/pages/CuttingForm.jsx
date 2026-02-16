@@ -206,9 +206,8 @@ export default function CuttingForm() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Unisex">Unisex</SelectItem>
+                  <SelectItem value="Mens">Mens</SelectItem>
+                  <SelectItem value="Womens">Womens</SelectItem>
                   <SelectItem value="Kids">Kids</SelectItem>
                 </SelectContent>
               </Select>
