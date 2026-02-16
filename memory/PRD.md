@@ -147,10 +147,10 @@ Based on user reference images, the following UI changes were implemented:
 - All core modules implemented and working
 - UI/UX overhaul completed
 
-### P1 (High)
-- Turnaround time analytics between stages
-- Delayed lots detection and alerts
-- Gender field restriction (Mens, Womens, Kids)
+### P1 (High) - COMPLETED
+- ✅ Gender field restriction (Mens, Womens, Kids)
+- ✅ Turnaround time analytics between stages
+- ✅ Delayed lots detection and alerts
 
 ### P2 (Medium)
 - Bulk operations on lots
