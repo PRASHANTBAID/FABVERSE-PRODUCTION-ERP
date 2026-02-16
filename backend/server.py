@@ -77,6 +77,13 @@ class LotCreate(BaseModel):
     fabric_price_per_meter_or_kg: float = 0.0
     cutting_notes: str = ""
 
+    @validator('gender')
+    def validate_gender(cls, v):
+        valid_genders = ["Mens", "Womens", "Kids"]
+        if v and v not in valid_genders:
+            raise ValueError(f"Gender must be one of: {valid_genders}")
+        return v
+
 class LotUpdate(BaseModel):
     lot_no: Optional[str] = None
     cutting_date: Optional[str] = None
