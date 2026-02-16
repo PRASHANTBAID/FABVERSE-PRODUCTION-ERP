@@ -168,11 +168,10 @@ Based on user reference images, the following UI changes were implemented:
 - Barcode/QR code generation for lots
 
 ## Next Tasks
-1. Update Gender field to dropdown (Mens, Womens, Kids)
-2. Add turnaround time metrics in reports
-3. Implement delayed lot detection
+1. Bulk operations on lots
+2. Mobile responsive improvements
 
 ## Testing
-- Backend tests: /app/backend/tests/test_fabverse_api.py, /app/backend/tests/test_kanban_stage_api.py
-- Test reports: /app/test_reports/iteration_2.json, /app/test_reports/iteration_3.json
+- Backend tests: /app/backend/tests/
+- Test reports: /app/test_reports/iteration_4.json
 - All tests passing (100% success rate for both backend and frontend)
