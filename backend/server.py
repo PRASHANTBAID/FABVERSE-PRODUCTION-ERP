@@ -1098,6 +1098,152 @@ async def get_dashboard_stats():
         "recent_lots": recent
     }
 
+# ==================== TURNAROUND TIME & DELAYED LOTS ====================
+
+@api_router.get("/reports/turnaround")
+async def get_turnaround_times():
+    """Calculate average turnaround times between stages"""
+    
+    # Get all lots with stage data
+    lots = await db.lots.find({}, {"_id": 0}).to_list(1000)
+    
+    # Calculate turnaround times
+    cutting_to_stitching = []
+    stitching_to_bartack = []
+    bartack_to_washing = []
+    washing_to_complete = []
+    total_turnaround = []
+    
+    for lot in lots:
+        lot_id = lot["id"]
+        cutting_date = lot.get("cutting_date")
+        
+        # Get stage data
+        stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        
+        try:
+            if cutting_date and stitching and stitching.get("lot_issue_date_to_stitching"):
+                days = (datetime.fromisoformat(stitching["lot_issue_date_to_stitching"]) - 
+                       datetime.fromisoformat(cutting_date)).days
+                if days >= 0:
+                    cutting_to_stitching.append(days)
+            
+            if stitching and stitching.get("receive_date_from_stitching") and bartack and bartack.get("lot_issue_to_bartack_date"):
+                days = (datetime.fromisoformat(bartack["lot_issue_to_bartack_date"]) - 
+                       datetime.fromisoformat(stitching["receive_date_from_stitching"])).days
+                if days >= 0:
+                    stitching_to_bartack.append(days)
+            
+            if bartack and bartack.get("lot_issue_to_bartack_date") and washing and washing.get("lot_issue_date_to_washing"):
+                days = (datetime.fromisoformat(washing["lot_issue_date_to_washing"]) - 
+                       datetime.fromisoformat(bartack["lot_issue_to_bartack_date"])).days
+                if days >= 0:
+                    bartack_to_washing.append(days)
+            
+            if washing and washing.get("lot_issue_date_to_washing") and washing.get("receive_date_from_washing"):
+                days = (datetime.fromisoformat(washing["receive_date_from_washing"]) - 
+                       datetime.fromisoformat(washing["lot_issue_date_to_washing"])).days
+                if days >= 0:
+                    washing_to_complete.append(days)
+            
+            # Total turnaround (cutting to completion)
+            if cutting_date and washing and washing.get("receive_date_from_washing"):
+                days = (datetime.fromisoformat(washing["receive_date_from_washing"]) - 
+                       datetime.fromisoformat(cutting_date)).days
+                if days >= 0:
+                    total_turnaround.append(days)
+        except Exception:
+            continue
+    
+    return {
+        "cutting_to_stitching": {
+            "average_days": round(sum(cutting_to_stitching) / len(cutting_to_stitching), 1) if cutting_to_stitching else 0,
+            "sample_size": len(cutting_to_stitching)
+        },
+        "stitching_to_bartack": {
+            "average_days": round(sum(stitching_to_bartack) / len(stitching_to_bartack), 1) if stitching_to_bartack else 0,
+            "sample_size": len(stitching_to_bartack)
+        },
+        "bartack_to_washing": {
+            "average_days": round(sum(bartack_to_washing) / len(bartack_to_washing), 1) if bartack_to_washing else 0,
+            "sample_size": len(bartack_to_washing)
+        },
+        "washing_to_complete": {
+            "average_days": round(sum(washing_to_complete) / len(washing_to_complete), 1) if washing_to_complete else 0,
+            "sample_size": len(washing_to_complete)
+        },
+        "total_turnaround": {
+            "average_days": round(sum(total_turnaround) / len(total_turnaround), 1) if total_turnaround else 0,
+            "sample_size": len(total_turnaround)
+        }
+    }
+
+@api_router.get("/reports/delayed")
+async def get_delayed_lots(days_threshold: int = 7):
+    """Get lots that have been stuck in a stage for more than threshold days"""
+    
+    today = datetime.now(timezone.utc).date()
+    delayed_lots = []
+    
+    lots = await db.lots.find(
+        {"overall_status": {"$ne": "Completed"}},
+        {"_id": 0}
+    ).to_list(1000)
+    
+    for lot in lots:
+        lot_id = lot["id"]
+        current_stage = lot.get("current_stage", "Cutting")
+        days_in_stage = 0
+        stage_start_date = None
+        
+        try:
+            if current_stage == "Cutting":
+                if lot.get("cutting_date"):
+                    stage_start_date = datetime.fromisoformat(lot["cutting_date"]).date()
+            
+            elif current_stage == "Stitching":
+                stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+                if stitching and stitching.get("lot_issue_date_to_stitching"):
+                    stage_start_date = datetime.fromisoformat(stitching["lot_issue_date_to_stitching"]).date()
+            
+            elif current_stage == "Bartack":
+                bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+                if bartack and bartack.get("lot_issue_to_bartack_date"):
+                    stage_start_date = datetime.fromisoformat(bartack["lot_issue_to_bartack_date"]).date()
+            
+            elif current_stage == "Washing/Dyeing":
+                washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+                if washing and washing.get("lot_issue_date_to_washing"):
+                    stage_start_date = datetime.fromisoformat(washing["lot_issue_date_to_washing"]).date()
+            
+            if stage_start_date:
+                days_in_stage = (today - stage_start_date).days
+                
+                if days_in_stage >= days_threshold:
+                    delayed_lots.append({
+                        "id": lot["id"],
+                        "lot_no": lot.get("lot_no"),
+                        "style": lot.get("style"),
+                        "fabric_name": lot.get("fabric_name"),
+                        "total_pcs_cut": lot.get("total_pcs_cut"),
+                        "current_stage": current_stage,
+                        "days_in_stage": days_in_stage,
+                        "stage_start_date": stage_start_date.isoformat()
+                    })
+        except Exception:
+            continue
+    
+    # Sort by days_in_stage descending
+    delayed_lots.sort(key=lambda x: x["days_in_stage"], reverse=True)
+    
+    return {
+        "threshold_days": days_threshold,
+        "total_delayed": len(delayed_lots),
+        "delayed_lots": delayed_lots
+    }
+
 # ==================== ROOT ====================
 
 @api_router.get("/")
