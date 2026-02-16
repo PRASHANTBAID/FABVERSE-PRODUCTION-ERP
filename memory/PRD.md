@@ -142,6 +142,8 @@ Based on user reference images, the following UI changes were implemented:
 - GET /api/challans, GET /api/challans/{id}
 - POST /api/import/excel, GET /api/export/excel
 - GET /api/reports/summary, GET /api/reports/export
+- **GET /api/reports/turnaround** - Average turnaround times between stages
+- **GET /api/reports/delayed?days_threshold=7** - Lots stuck in a stage
 - GET /api/dashboard/stats
 - GET/PUT /api/settings/firm
 
