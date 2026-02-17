@@ -525,15 +525,17 @@ export default function Dashboard() {
           onDragEnd={handleDragEnd}
           onDragOver={handleDragOver}
         >
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            {STAGES.map((stage) => (
-              <KanbanColumn
-                key={stage}
-                stage={stage}
-                lots={lots}
-                onLotClick={(lotId) => navigate(`/lot/${lotId}`)}
-              />
-            ))}
+          <div className="overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="grid grid-cols-5 gap-3 sm:gap-4 min-w-[900px] md:min-w-0">
+              {STAGES.map((stage) => (
+                <KanbanColumn
+                  key={stage}
+                  stage={stage}
+                  lots={lots}
+                  onLotClick={(lotId) => navigate(`/lot/${lotId}`)}
+                />
+              ))}
+            </div>
           </div>
           <DragOverlay>
             {activeLot ? (
@@ -549,7 +551,7 @@ export default function Dashboard() {
 
       {/* Kanban Help Text */}
       {viewMode === "kanban" && (
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-xs sm:text-sm text-gray-500">
           Drag and drop lots between columns to change their production stage
         </p>
       )}
