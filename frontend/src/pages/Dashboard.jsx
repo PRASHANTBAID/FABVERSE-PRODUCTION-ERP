@@ -448,10 +448,10 @@ export default function Dashboard() {
               <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
             </div>
           ) : lots.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500 p-4">
               <Package className="w-12 h-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">No lots found</p>
-              <p className="text-sm">Create a new lot to get started</p>
+              <p className="text-sm text-center">Create a new lot to get started</p>
               <Button className="mt-4 bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/cutting/new")}>
                 <Plus className="w-4 h-4 mr-2" />
                 Create First Lot
@@ -463,13 +463,13 @@ export default function Dashboard() {
                 <TableHeader>
                   <TableRow className="bg-gray-50 border-b">
                     <TableHead className="font-semibold text-gray-600">Lot No</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Date</TableHead>
+                    <TableHead className="font-semibold text-gray-600 hidden sm:table-cell">Date</TableHead>
                     <TableHead className="font-semibold text-gray-600">Pcs</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Fabric</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Style</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Fabricator</TableHead>
+                    <TableHead className="font-semibold text-gray-600 hidden lg:table-cell">Fabric</TableHead>
+                    <TableHead className="font-semibold text-gray-600 hidden md:table-cell">Style</TableHead>
+                    <TableHead className="font-semibold text-gray-600 hidden xl:table-cell">Fabricator</TableHead>
                     <TableHead className="font-semibold text-gray-600">Stage</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Status</TableHead>
+                    <TableHead className="font-semibold text-gray-600 hidden sm:table-cell">Status</TableHead>
                     <TableHead className="font-semibold text-gray-600">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -481,20 +481,20 @@ export default function Dashboard() {
                       data-testid={`lot-row-${lot.lot_no}`}
                     >
                       <TableCell className="font-semibold text-gray-800">{lot.lot_no}</TableCell>
-                      <TableCell className="text-gray-600">{formatDate(lot.cutting_date)}</TableCell>
+                      <TableCell className="text-gray-600 hidden sm:table-cell">{formatDate(lot.cutting_date)}</TableCell>
                       <TableCell className="text-gray-600">{lot.total_pcs_cut}</TableCell>
-                      <TableCell className="text-gray-600 max-w-32 truncate">{lot.fabric_name || "-"}</TableCell>
-                      <TableCell className="text-gray-600">{lot.style || "-"}</TableCell>
-                      <TableCell className="text-gray-600">
+                      <TableCell className="text-gray-600 max-w-32 truncate hidden lg:table-cell">{lot.fabric_name || "-"}</TableCell>
+                      <TableCell className="text-gray-600 hidden md:table-cell">{lot.style || "-"}</TableCell>
+                      <TableCell className="text-gray-600 hidden xl:table-cell">
                         {lot.stitching?.stitching_fabricator_name || "-"}
                       </TableCell>
                       <TableCell>
-                        <span className={cn("px-2 py-1 rounded text-xs font-medium", getStageStyle(lot.current_stage))}>
+                        <span className={cn("px-2 py-1 rounded text-xs font-medium whitespace-nowrap", getStageStyle(lot.current_stage))}>
                           {lot.current_stage}
                         </span>
                       </TableCell>
-                      <TableCell>
-                        <span className={cn("px-2 py-1 rounded text-xs font-medium", getStatusStyle(lot.overall_status))}>
+                      <TableCell className="hidden sm:table-cell">
+                        <span className={cn("px-2 py-1 rounded text-xs font-medium whitespace-nowrap", getStatusStyle(lot.overall_status))}>
                           {lot.overall_status}
                         </span>
                       </TableCell>
