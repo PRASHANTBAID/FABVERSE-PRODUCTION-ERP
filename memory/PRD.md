@@ -157,10 +157,10 @@ Based on user reference images, the following UI changes were implemented:
 - ✅ Turnaround time analytics between stages
 - ✅ Delayed lots detection and alerts
 
-### P2 (Medium)
-- Bulk operations on lots
-- Mobile responsive improvements
-- Kanban board drag-and-drop
+### P2 (Medium) - COMPLETED
+- ✅ Bulk operations on lots (delete, change status, change stage)
+- ✅ Mobile responsive improvements
+- ✅ Kanban board drag-and-drop
 
 ### P3 (Low)
 - Multiple user roles
@@ -168,10 +168,10 @@ Based on user reference images, the following UI changes were implemented:
 - Barcode/QR code generation for lots
 
 ## Next Tasks
-1. Bulk operations on lots
-2. Mobile responsive improvements
+1. User roles and permissions (multi-user support)
+2. Real-time notifications for production events
 
 ## Testing
 - Backend tests: /app/backend/tests/
-- Test reports: /app/test_reports/iteration_4.json
+- Test reports: /app/test_reports/iteration_5.json
 - All tests passing (100% success rate for both backend and frontend)
