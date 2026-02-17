@@ -138,6 +138,9 @@ Based on user reference images, the following UI changes were implemented:
 - POST /api/auth/change-password
 - GET /api/lots, POST /api/lots, GET /api/lots/{id}, PUT /api/lots/{id}, DELETE /api/lots/{id}
 - **PUT /api/lots/{lot_id}/stage** - Update lot stage (for Kanban drag-drop)
+- **POST /api/lots/bulk-delete** - Delete multiple lots at once
+- **POST /api/lots/bulk-status** - Change status of multiple lots
+- **POST /api/lots/bulk-stage** - Change stage of multiple lots
 - POST /api/stitching, PUT /api/stitching/{lot_id}
 - POST /api/bartack, PUT /api/bartack/{lot_id}
 - POST /api/washing, PUT /api/washing/{lot_id}
