@@ -78,6 +78,13 @@ export default function ChallanView() {
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
+        onclone: (clonedDoc) => {
+          // Ensure all styles are computed in the cloned document
+          const clonedElement = clonedDoc.querySelector('[data-challan-card]');
+          if (clonedElement) {
+            clonedElement.style.width = '700px';
+          }
+        }
       });
       
       const imgData = canvas.toDataURL('image/png');
@@ -122,6 +129,21 @@ export default function ChallanView() {
     return null;
   }
 
+  // Inline styles for reliable PDF rendering
+  const badgeStyle = {
+    display: 'inline-block',
+    padding: '8px 16px',
+    borderRadius: '8px',
+    fontSize: '14px',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    backgroundColor: challan.type === "Stitching" ? '#d1fae5' : '#fef3c7',
+    color: challan.type === "Stitching" ? '#047857' : '#b45309',
+  };
+
+  const badgeText = challan.type === "Stitching" ? "STITCHING CHALLAN" : "WASHING CHALLAN";
+
   return (
     <div className="space-y-6" data-testid="challan-view">
       {/* Header */}
@@ -161,119 +183,159 @@ export default function ChallanView() {
         </Button>
       </div>
 
-      {/* Challan Card */}
-      <div ref={challanRef} className="bg-white rounded-xl shadow-sm border overflow-hidden max-w-3xl mx-auto">
+      {/* Challan Card - Using inline styles for PDF compatibility */}
+      <div 
+        ref={challanRef} 
+        data-challan-card
+        style={{
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+          border: '1px solid #e5e7eb',
+          overflow: 'hidden',
+          maxWidth: '700px',
+          margin: '0 auto',
+        }}
+      >
         {/* Header Section */}
-        <div className="p-6 border-b">
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-600">$</span>
+        <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ 
+                width: '48px', 
+                height: '48px', 
+                backgroundColor: '#f3f4f6', 
+                borderRadius: '8px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center' 
+              }}>
+                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#4b5563' }}>$</span>
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">{firmSettings.firm_name}</h2>
-                <p className="text-sm text-gray-500">
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 4px 0' }}>
+                  {firmSettings.firm_name}
+                </h2>
+                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>
                   {firmSettings.address_line1}
                   {firmSettings.address_line2 && `, ${firmSettings.address_line2}`}
                 </p>
-                <p className="text-sm text-gray-500">{firmSettings.city_state_pin}</p>
-                {firmSettings.mobile && <p className="text-sm text-gray-500">Phone: {firmSettings.mobile}</p>}
+                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>{firmSettings.city_state_pin}</p>
+                {firmSettings.mobile && (
+                  <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Phone: {firmSettings.mobile}</p>
+                )}
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Challan No</p>
-              <p className="text-2xl font-bold text-blue-600">{challan.challan_number}</p>
-              <p className="text-sm text-gray-500">Date: {formatDate(challan.issue_date)}</p>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>
+                Challan No
+              </p>
+              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb', margin: '0' }}>
+                {challan.challan_number}
+              </p>
+              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Date: {formatDate(challan.issue_date)}</p>
             </div>
           </div>
         </div>
 
-        {/* Challan Type Badge */}
-        <div className="px-6 py-3 border-b">
-          <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold uppercase tracking-wide ${
-            challan.type === "Stitching" 
-              ? "bg-emerald-100 text-emerald-700" 
-              : "bg-amber-100 text-amber-700"
-          }`}>
-            {challan.type === "Stitching" ? "STITCHING CHALLAN" : "WASHING CHALLAN"}
+        {/* Challan Type Badge - Using inline styles */}
+        <div style={{ padding: '12px 24px', borderBottom: '1px solid #e5e7eb' }}>
+          <span style={badgeStyle}>
+            {badgeText}
           </span>
         </div>
 
         {/* Recipient Section */}
-        <div className="px-6 py-4 bg-gray-50 border-b">
-          <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">
+        <div style={{ padding: '16px 24px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+          <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
             {challan.type === "Stitching" ? "Fabricator" : "Washing/Dyeing Firm"}
           </p>
-          <p className="text-xl font-bold text-gray-800">{challan.recipient_name}</p>
+          <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', margin: '0' }}>
+            {challan.recipient_name}
+          </p>
         </div>
 
         {/* Lot Details */}
-        <div className="p-6 border-b">
-          <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-4">Lot Details</h3>
-          <div className="grid grid-cols-2 gap-4">
+        <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>
+            Lot Details
+          </h3>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Lot No</p>
-              <p className="text-lg font-bold text-gray-800">{lot.lot_no}</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Lot No</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '0' }}>{lot.lot_no}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Pieces Issued</p>
-              <p className="text-lg font-bold text-gray-800">{challan.pcs_issued}</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Pieces Issued</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '0' }}>{challan.pcs_issued}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Style</p>
-              <p className="text-lg font-semibold text-gray-700">{lot.style || "-"}</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Style</p>
+              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.style || "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Fabric</p>
-              <p className="text-lg font-semibold text-gray-700">{lot.fabric_name || "-"}</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Fabric</p>
+              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.fabric_name || "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Sizes</p>
-              <p className="text-lg font-semibold text-gray-700">{lot.sizes || "-"}</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Sizes</p>
+              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.sizes || "-"}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide">Gender</p>
-              <p className="text-lg font-semibold text-gray-700">{lot.gender || "-"}</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Gender</p>
+              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.gender || "-"}</p>
             </div>
           </div>
         </div>
 
         {/* Washing/Dyeing Instructions (for Stitching Challan) */}
         {challan.type === "Stitching" && lot.dyeing_or_washing_instructions && (
-          <div className="px-6 py-4 border-b">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Washing/Dyeing Instructions</h3>
-            <p className="text-gray-700 bg-gray-50 rounded-lg p-3">{lot.dyeing_or_washing_instructions}</p>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
+              Washing/Dyeing Instructions
+            </h3>
+            <p style={{ color: '#374151', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', margin: '0' }}>
+              {lot.dyeing_or_washing_instructions}
+            </p>
           </div>
         )}
 
         {/* Bartack Done By (for Washing Challan) */}
         {challan.type === "Washing" && challan.bartack_person && (
-          <div className="px-6 py-4 bg-amber-50 border-b">
-            <p className="text-xs text-amber-600 uppercase tracking-wide mb-1">Bartack Done By</p>
-            <p className="text-lg font-bold text-amber-700">{challan.bartack_person}</p>
+          <div style={{ padding: '16px 24px', backgroundColor: '#fffbeb', borderBottom: '1px solid #e5e7eb' }}>
+            <p style={{ fontSize: '12px', color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
+              Bartack Done By
+            </p>
+            <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#b45309', margin: '0' }}>
+              {challan.bartack_person}
+            </p>
           </div>
         )}
 
         {/* Notes */}
         {challan.notes && (
-          <div className="px-6 py-4 border-b">
-            <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-2">Notes</h3>
-            <p className="text-gray-700 bg-gray-50 rounded-lg p-3">{challan.notes}</p>
+          <div style={{ padding: '16px 24px', borderBottom: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
+              Notes
+            </h3>
+            <p style={{ color: '#374151', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', margin: '0' }}>
+              {challan.notes}
+            </p>
           </div>
         )}
 
         {/* Signatures */}
-        <div className="p-6">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="text-center">
-              <div className="h-16 border-b-2 border-dashed border-gray-300 mb-2" />
-              <p className="text-sm text-gray-500">Authorized Signature</p>
-              <p className="text-xs text-gray-400">({firmSettings.firm_name})</p>
+        <div style={{ padding: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ height: '64px', borderBottom: '2px dashed #d1d5db', marginBottom: '8px' }} />
+              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Authorized Signature</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0' }}>({firmSettings.firm_name})</p>
             </div>
-            <div className="text-center">
-              <div className="h-16 border-b-2 border-dashed border-gray-300 mb-2" />
-              <p className="text-sm text-gray-500">Receiver Signature</p>
-              <p className="text-xs text-gray-400">({challan.recipient_name})</p>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ height: '64px', borderBottom: '2px dashed #d1d5db', marginBottom: '8px' }} />
+              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Receiver Signature</p>
+              <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0' }}>({challan.recipient_name})</p>
             </div>
           </div>
         </div>
