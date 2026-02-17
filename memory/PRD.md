@@ -130,6 +130,8 @@ Based on user reference images, the following UI changes were implemented:
 - ✅ **Gender field restricted to Mens/Womens/Kids**
 - ✅ **Turnaround time metrics** (avg days between stages)
 - ✅ **Delayed lots detection** (stuck in stage > 7 days)
+- ✅ **Bulk operations on Lots page** (select multiple, change status/stage, delete)
+- ✅ **Mobile responsive design** (collapsible sidebar, adaptive tables, full-width buttons)
 
 ## API Endpoints
 - POST /api/auth/login
