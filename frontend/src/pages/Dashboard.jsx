@@ -46,13 +46,13 @@ import { CSS } from "@dnd-kit/utilities";
 const STAGES = ["Cutting", "Stitching", "Bartack", "Washing/Dyeing", "Completed"];
 
 const StatCard = ({ title, value, icon: Icon, iconBg, iconColor }) => (
-  <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
-    <div className={cn("p-3 rounded-lg", iconBg)}>
-      <Icon className={cn("w-6 h-6", iconColor)} />
+  <div className="bg-white rounded-xl border border-gray-200 p-3 sm:p-5 flex items-center gap-3 sm:gap-4">
+    <div className={cn("p-2 sm:p-3 rounded-lg", iconBg)}>
+      <Icon className={cn("w-5 h-5 sm:w-6 sm:h-6", iconColor)} />
     </div>
     <div>
-      <p className="text-3xl font-bold text-gray-800">{value}</p>
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
+      <p className="text-xl sm:text-3xl font-bold text-gray-800">{value}</p>
+      <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase tracking-wide">{title}</p>
     </div>
   </div>
 );
