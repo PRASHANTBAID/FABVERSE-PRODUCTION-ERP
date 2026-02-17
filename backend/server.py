@@ -442,6 +442,90 @@ async def delete_lot(lot_id: str):
     
     return {"message": "Lot and related data deleted"}
 
+# ==================== BULK OPERATIONS ====================
+
+class BulkDeleteRequest(BaseModel):
+    lot_ids: List[str]
+
+class BulkStatusRequest(BaseModel):
+    lot_ids: List[str]
+    status: str
+
+class BulkStageRequest(BaseModel):
+    lot_ids: List[str]
+    stage: str
+
+@api_router.post("/lots/bulk-delete")
+async def bulk_delete_lots(request: BulkDeleteRequest, authorization: str = Header(None)):
+    await get_current_user(authorization)
+    
+    if not request.lot_ids:
+        raise HTTPException(status_code=400, detail="No lot IDs provided")
+    
+    deleted_count = 0
+    for lot_id in request.lot_ids:
+        result = await db.lots.delete_one({"id": lot_id})
+        if result.deleted_count > 0:
+            deleted_count += 1
+            # Delete related data
+            await db.stitching_stages.delete_many({"lot_id": lot_id})
+            await db.bartack_stages.delete_many({"lot_id": lot_id})
+            await db.washing_stages.delete_many({"lot_id": lot_id})
+            await db.challans.delete_many({"lot_id": lot_id})
+    
+    return {"message": f"Deleted {deleted_count} lots", "deleted_count": deleted_count}
+
+@api_router.post("/lots/bulk-status")
+async def bulk_update_status(request: BulkStatusRequest, authorization: str = Header(None)):
+    await get_current_user(authorization)
+    
+    if not request.lot_ids:
+        raise HTTPException(status_code=400, detail="No lot IDs provided")
+    
+    valid_statuses = ["Pending", "In Progress", "Completed", "Delayed"]
+    if request.status not in valid_statuses:
+        raise HTTPException(status_code=400, detail=f"Invalid status. Must be one of: {valid_statuses}")
+    
+    result = await db.lots.update_many(
+        {"id": {"$in": request.lot_ids}},
+        {"$set": {
+            "overall_status": request.status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": f"Updated {result.modified_count} lots", "updated_count": result.modified_count}
+
+@api_router.post("/lots/bulk-stage")
+async def bulk_update_stage(request: BulkStageRequest, authorization: str = Header(None)):
+    await get_current_user(authorization)
+    
+    if not request.lot_ids:
+        raise HTTPException(status_code=400, detail="No lot IDs provided")
+    
+    valid_stages = ["Cutting", "Stitching", "Bartack", "Washing/Dyeing", "Completed"]
+    if request.stage not in valid_stages:
+        raise HTTPException(status_code=400, detail=f"Invalid stage. Must be one of: {valid_stages}")
+    
+    # Determine status based on stage
+    if request.stage == "Completed":
+        status = "Completed"
+    elif request.stage == "Cutting":
+        status = "Pending"
+    else:
+        status = "In Progress"
+    
+    result = await db.lots.update_many(
+        {"id": {"$in": request.lot_ids}},
+        {"$set": {
+            "current_stage": request.stage,
+            "overall_status": status,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
+    )
+    
+    return {"message": f"Updated {result.modified_count} lots", "updated_count": result.modified_count}
+
 class StageUpdateRequest(BaseModel):
     stage: str
 
