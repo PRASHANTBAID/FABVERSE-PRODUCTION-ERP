@@ -201,17 +201,31 @@ export default function ChallanView() {
         <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              <div style={{ 
-                width: '48px', 
-                height: '48px', 
-                backgroundColor: '#f3f4f6', 
-                borderRadius: '8px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center' 
-              }}>
-                <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#4b5563' }}>$</span>
-              </div>
+              {firmSettings.logo_url ? (
+                <img 
+                  src={firmSettings.logo_url} 
+                  alt="Logo"
+                  style={{ 
+                    width: '60px', 
+                    height: '60px', 
+                    objectFit: 'contain',
+                    borderRadius: '8px',
+                  }}
+                  crossOrigin="anonymous"
+                />
+              ) : (
+                <div style={{ 
+                  width: '48px', 
+                  height: '48px', 
+                  backgroundColor: '#f3f4f6', 
+                  borderRadius: '8px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center' 
+                }}>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#4b5563' }}>$</span>
+                </div>
+              )}
               <div>
                 <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 4px 0' }}>
                   {firmSettings.firm_name}
