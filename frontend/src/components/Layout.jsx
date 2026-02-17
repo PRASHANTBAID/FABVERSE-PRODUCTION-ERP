@@ -118,6 +118,19 @@ const Sidebar = ({ onNavigate, firmSettings }) => {
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [firmSettings, setFirmSettings] = useState(null);
+
+  useEffect(() => {
+    const fetchFirmSettings = async () => {
+      try {
+        const res = await api.get("/settings/firm");
+        setFirmSettings(res.data);
+      } catch (error) {
+        console.error("Failed to fetch firm settings");
+      }
+    };
+    fetchFirmSettings();
+  }, []);
 
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -125,13 +138,13 @@ export default function Layout({ children }) {
     <div className="min-h-screen flex bg-[#e8f4fc]">
       {/* Desktop Sidebar */}
       <aside className="hidden lg:flex lg:w-56 lg:flex-col lg:fixed lg:inset-y-0">
-        <Sidebar onNavigate={closeSidebar} />
+        <Sidebar onNavigate={closeSidebar} firmSettings={firmSettings} />
       </aside>
 
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent side="left" className="p-0 w-56 border-0">
-          <Sidebar onNavigate={closeSidebar} />
+          <Sidebar onNavigate={closeSidebar} firmSettings={firmSettings} />
         </SheetContent>
       </Sheet>
 
