@@ -3,10 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { api } from "@/App";
 import { toast } from "sonner";
 import { cn, formatDate } from "@/lib/utils";
-import { Search, Plus, Eye, Trash2 } from "lucide-react";
+import { Search, Plus, Eye, Trash2, CheckSquare, Square, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -36,6 +36,11 @@ export default function Lots() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [lotToDelete, setLotToDelete] = useState(null);
+  
+  // Bulk operations state
+  const [selectedLots, setSelectedLots] = useState([]);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkActionLoading, setBulkActionLoading] = useState(false);
 
   useEffect(() => {
     fetchLots();
