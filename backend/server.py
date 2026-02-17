@@ -257,10 +257,15 @@ async def update_firm_settings(settings: FirmSettings, authorization: str = Head
 async def proxy_logo():
     """Proxy the firm logo to avoid CORS issues with html2canvas"""
     settings = await db.firm_settings.find_one({"type": "firm"}, {"_id": 0})
-    if not settings or not settings.get("logo_url"):
-        raise HTTPException(status_code=404, detail="No logo configured")
     
-    logo_url = settings["logo_url"]
+    # Use default logo if no settings in database
+    if not settings:
+        logo_url = "https://customer-assets.emergentagent.com/job_fresh-start-208/artifacts/wh0wtqse_2.jpg"
+    else:
+        logo_url = settings.get("logo_url")
+    
+    if not logo_url:
+        raise HTTPException(status_code=404, detail="No logo configured")
     
     async with httpx.AsyncClient() as client:
         try:
