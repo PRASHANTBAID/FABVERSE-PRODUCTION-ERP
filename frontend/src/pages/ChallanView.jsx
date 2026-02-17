@@ -219,17 +219,16 @@ export default function ChallanView() {
         <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-              {firmSettings.logo_url ? (
+              {(logoDataUrl || firmSettings.logo_url) ? (
                 <img 
-                  src={firmSettings.logo_url} 
-                  alt="Logo"
+                  src={logoDataUrl || firmSettings.logo_url} 
+                  alt=""
                   style={{ 
                     width: '60px', 
                     height: '60px', 
                     objectFit: 'contain',
                     borderRadius: '8px',
                   }}
-                  crossOrigin="anonymous"
                 />
               ) : (
                 <div style={{ 
