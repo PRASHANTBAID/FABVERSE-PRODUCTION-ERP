@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/App";
+import { useAuth, api } from "@/App";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
