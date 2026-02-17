@@ -313,16 +313,16 @@ export default function Dashboard() {
   const activeLot = activeId ? lots.find((lot) => lot.id === activeId) : null;
 
   return (
-    <div className="space-y-6" data-testid="dashboard">
+    <div className="space-y-4 sm:space-y-6" data-testid="dashboard">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500 mt-1">Production pipeline overview</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-sm sm:text-base text-gray-500 mt-1">Production pipeline overview</p>
         </div>
         <Button 
           onClick={() => navigate("/cutting/new")} 
-          className="bg-blue-600 hover:bg-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
           data-testid="new-lot-btn"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -331,7 +331,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <StatCard
           title="Total Lots"
           value={stats?.total_lots || lots.length}
@@ -370,8 +370,8 @@ export default function Dashboard() {
       </div>
 
       {/* Filters */}
-      <div className="bg-white rounded-xl shadow-sm border p-4">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white rounded-xl shadow-sm border p-3 sm:p-4">
+        <div className="flex flex-col gap-3 sm:gap-4">
           <div className="flex-1 relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
@@ -382,9 +382,9 @@ export default function Dashboard() {
               data-testid="search-input"
             />
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex flex-wrap gap-2 sm:gap-3 items-center">
             <Select value={stageFilter} onValueChange={setStageFilter}>
-              <SelectTrigger className="w-full md:w-36 bg-gray-50 border-gray-200" data-testid="stage-filter">
+              <SelectTrigger className="flex-1 min-w-[120px] sm:w-36 bg-gray-50 border-gray-200" data-testid="stage-filter">
                 <SelectValue placeholder="All Stages" />
               </SelectTrigger>
               <SelectContent>
@@ -397,7 +397,7 @@ export default function Dashboard() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-36 bg-gray-50 border-gray-200" data-testid="status-filter">
+              <SelectTrigger className="flex-1 min-w-[120px] sm:w-36 bg-gray-50 border-gray-200" data-testid="status-filter">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -408,12 +408,12 @@ export default function Dashboard() {
                 <SelectItem value="Delayed">Delayed</SelectItem>
               </SelectContent>
             </Select>
-            <div className="flex bg-gray-100 rounded-lg p-1">
+            <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
               <Button
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "px-3 h-8",
+                  "flex-1 sm:flex-none px-3 h-8",
                   viewMode === "table" ? "bg-white shadow-sm" : "hover:bg-gray-200"
                 )}
                 onClick={() => setViewMode("table")}
@@ -426,7 +426,7 @@ export default function Dashboard() {
                 variant="ghost"
                 size="sm"
                 className={cn(
-                  "px-3 h-8",
+                  "flex-1 sm:flex-none px-3 h-8",
                   viewMode === "kanban" ? "bg-white shadow-sm" : "hover:bg-gray-200"
                 )}
                 onClick={() => setViewMode("kanban")}
