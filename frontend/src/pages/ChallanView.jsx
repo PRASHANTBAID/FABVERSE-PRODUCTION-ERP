@@ -195,7 +195,7 @@ export default function ChallanView() {
               ? "bg-emerald-100 text-emerald-700" 
               : "bg-amber-100 text-amber-700"
           }`}>
-            {challan.type} Challan
+            {challan.type === "Stitching" ? "STITCHING CHALLAN" : "WASHING CHALLAN"}
           </span>
         </div>
 
