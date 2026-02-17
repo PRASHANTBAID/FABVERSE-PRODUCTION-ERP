@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { api } from "@/App";
+import { api, API } from "@/App";
 import { toast } from "sonner";
 import { formatDate } from "@/lib/utils";
 import { ArrowLeft, Printer, Loader2 } from "lucide-react";
@@ -16,6 +16,7 @@ export default function ChallanView() {
   const [challan, setChallan] = useState(null);
   const [lot, setLot] = useState(null);
   const [firmSettings, setFirmSettings] = useState(null);
+  const [logoDataUrl, setLogoDataUrl] = useState(null);
   const challanRef = useRef(null);
 
   useEffect(() => {
