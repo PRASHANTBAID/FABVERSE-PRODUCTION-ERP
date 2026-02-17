@@ -253,6 +253,34 @@ async def update_firm_settings(settings: FirmSettings, authorization: str = Head
     
     return {"message": "Firm settings updated successfully"}
 
+@api_router.get("/settings/logo-proxy")
+async def proxy_logo():
+    """Proxy the firm logo to avoid CORS issues with html2canvas"""
+    settings = await db.firm_settings.find_one({"type": "firm"}, {"_id": 0})
+    if not settings or not settings.get("logo_url"):
+        raise HTTPException(status_code=404, detail="No logo configured")
+    
+    logo_url = settings["logo_url"]
+    
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(logo_url, timeout=10)
+            response.raise_for_status()
+            
+            content_type = response.headers.get("content-type", "image/jpeg")
+            
+            return Response(
+                content=response.content,
+                media_type=content_type,
+                headers={
+                    "Cache-Control": "public, max-age=3600",
+                    "Access-Control-Allow-Origin": "*"
+                }
+            )
+        except Exception as e:
+            logger.error(f"Failed to proxy logo: {e}")
+            raise HTTPException(status_code=500, detail="Failed to fetch logo")
+
 # ==================== LOT ROUTES ====================
 
 @api_router.post("/lots")
