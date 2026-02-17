@@ -240,9 +240,33 @@ export default function ChallanView() {
 
         {/* Challan Type Badge - Using inline styles */}
         <div style={{ padding: '12px 24px', borderBottom: '1px solid #e5e7eb' }}>
-          <span style={badgeStyle}>
-            {badgeText}
-          </span>
+          {challan.type === "Stitching" ? (
+            <span style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '700',
+              letterSpacing: '0.1em',
+              backgroundColor: '#10b981',
+              color: '#ffffff',
+            }}>
+              STITCHING CHALLAN
+            </span>
+          ) : (
+            <span style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '700',
+              letterSpacing: '0.1em',
+              backgroundColor: '#f59e0b',
+              color: '#ffffff',
+            }}>
+              WASHING CHALLAN
+            </span>
+          )}
         </div>
 
         {/* Recipient Section */}
