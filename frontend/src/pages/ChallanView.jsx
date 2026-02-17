@@ -28,6 +28,23 @@ export default function ChallanView() {
       const firmRes = await api.get("/settings/firm");
       setFirmSettings(firmRes.data);
 
+      // Fetch logo as data URL for PDF rendering
+      if (firmRes.data.logo_url) {
+        try {
+          const logoResponse = await fetch(`${API}/settings/logo-proxy`);
+          if (logoResponse.ok) {
+            const blob = await logoResponse.blob();
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              setLogoDataUrl(reader.result);
+            };
+            reader.readAsDataURL(blob);
+          }
+        } catch (e) {
+          console.log("Could not load logo for PDF");
+        }
+      }
+
       const firstHyphen = challanId.indexOf("-");
       const type = challanId.substring(0, firstHyphen);
       const lotId = challanId.substring(firstHyphen + 1);
