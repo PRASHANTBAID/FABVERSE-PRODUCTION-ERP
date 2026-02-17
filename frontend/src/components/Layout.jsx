@@ -46,7 +46,7 @@ const NavLink = ({ item, active, onClick }) => (
   </Link>
 );
 
-const Sidebar = ({ onNavigate }) => {
+const Sidebar = ({ onNavigate, firmSettings }) => {
   const location = useLocation();
   const { logout, user } = useAuth();
 
@@ -60,11 +60,21 @@ const Sidebar = ({ onNavigate }) => {
       {/* Logo */}
       <div className="p-5 border-b border-blue-800/50">
         <Link to="/" className="flex items-center gap-3" data-testid="logo-link">
-          <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-xl">$</span>
-          </div>
+          {firmSettings?.logo_url ? (
+            <img 
+              src={firmSettings.logo_url} 
+              alt="Logo"
+              className="w-10 h-10 object-contain rounded-lg bg-white/10"
+            />
+          ) : (
+            <div className="w-10 h-10 bg-white/10 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xl">$</span>
+            </div>
+          )}
           <div>
-            <span className="text-xl font-bold text-white tracking-wide">FABVERSE</span>
+            <span className="text-xl font-bold text-white tracking-wide">
+              {firmSettings?.firm_name || "FABVERSE"}
+            </span>
             <p className="text-xs text-blue-200">Production ERP</p>
           </div>
         </Link>
