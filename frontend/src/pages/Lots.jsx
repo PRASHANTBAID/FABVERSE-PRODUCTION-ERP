@@ -76,6 +76,72 @@ export default function Lots() {
     }
   };
 
+  // Bulk selection handlers
+  const toggleSelectAll = () => {
+    if (selectedLots.length === lots.length) {
+      setSelectedLots([]);
+    } else {
+      setSelectedLots(lots.map(lot => lot.id));
+    }
+  };
+
+  const toggleSelectLot = (lotId) => {
+    setSelectedLots(prev => 
+      prev.includes(lotId) 
+        ? prev.filter(id => id !== lotId)
+        : [...prev, lotId]
+    );
+  };
+
+  const clearSelection = () => {
+    setSelectedLots([]);
+  };
+
+  // Bulk action handlers
+  const handleBulkDelete = async () => {
+    if (selectedLots.length === 0) return;
+    setBulkActionLoading(true);
+    try {
+      const res = await api.post("/lots/bulk-delete", { lot_ids: selectedLots });
+      toast.success(res.data.message);
+      setSelectedLots([]);
+      fetchLots();
+    } catch (error) {
+      toast.error("Failed to delete lots");
+    } finally {
+      setBulkActionLoading(false);
+      setBulkDeleteDialogOpen(false);
+    }
+  };
+
+  const handleBulkStatusChange = async (status) => {
+    if (selectedLots.length === 0) return;
+    setBulkActionLoading(true);
+    try {
+      const res = await api.post("/lots/bulk-status", { lot_ids: selectedLots, status });
+      toast.success(res.data.message);
+      fetchLots();
+    } catch (error) {
+      toast.error("Failed to update status");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
+  const handleBulkStageChange = async (stage) => {
+    if (selectedLots.length === 0) return;
+    setBulkActionLoading(true);
+    try {
+      const res = await api.post("/lots/bulk-stage", { lot_ids: selectedLots, stage });
+      toast.success(res.data.message);
+      fetchLots();
+    } catch (error) {
+      toast.error("Failed to update stage");
+    } finally {
+      setBulkActionLoading(false);
+    }
+  };
+
   const getStageStyle = (stage) => {
     const styles = {
       "Cutting": "bg-blue-100 text-blue-700 border-l-4 border-l-blue-500",
