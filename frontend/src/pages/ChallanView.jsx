@@ -240,31 +240,31 @@ export default function ChallanView() {
                   alignItems: 'center', 
                   justifyContent: 'center' 
                 }}>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#4b5563' }}>$</span>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold', color: '#000000' }}>$</span>
                 </div>
               )}
               <div>
-                <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 4px 0' }}>
+                <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#000000', margin: '0 0 4px 0' }}>
                   {firmSettings.firm_name}
                 </h2>
-                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: '0' }}>
                   {firmSettings.address_line1}
                   {firmSettings.address_line2 && `, ${firmSettings.address_line2}`}
                 </p>
-                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>{firmSettings.city_state_pin}</p>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: '0' }}>{firmSettings.city_state_pin}</p>
                 {firmSettings.mobile && (
-                  <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>Phone: {firmSettings.mobile}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: '0' }}>Phone: {firmSettings.mobile}</p>
                 )}
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>
+            <div style={{ textAlign: 'right', paddingRight: '24px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#000000', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>
                 Challan No
               </p>
-              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb', margin: '0' }}>
+              <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#000000', margin: '0' }}>
                 {challan.challan_number}
               </p>
-              <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>Date: {formatDate(challan.issue_date)}</p>
+              <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#000000', margin: '0' }}>Date: {formatDate(challan.issue_date)}</p>
             </div>
           </div>
         </div>
