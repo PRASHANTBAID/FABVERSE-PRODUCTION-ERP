@@ -216,7 +216,7 @@ export default function ChallanView() {
         }}
       >
         {/* Header Section */}
-        <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ padding: '24px', paddingLeft: '48px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
               {(logoDataUrl || firmSettings.logo_url) ? (
@@ -247,30 +247,30 @@ export default function ChallanView() {
                 <h2 style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 4px 0' }}>
                   {firmSettings.firm_name}
                 </h2>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>
                   {firmSettings.address_line1}
                   {firmSettings.address_line2 && `, ${firmSettings.address_line2}`}
                 </p>
-                <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>{firmSettings.city_state_pin}</p>
+                <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>{firmSettings.city_state_pin}</p>
                 {firmSettings.mobile && (
-                  <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Phone: {firmSettings.mobile}</p>
+                  <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>Phone: {firmSettings.mobile}</p>
                 )}
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>
                 Challan No
               </p>
               <p style={{ fontSize: '24px', fontWeight: 'bold', color: '#2563eb', margin: '0' }}>
                 {challan.challan_number}
               </p>
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Date: {formatDate(challan.issue_date)}</p>
+              <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>Date: {formatDate(challan.issue_date)}</p>
             </div>
           </div>
         </div>
 
         {/* Challan Type Badge - Using inline styles */}
-        <div style={{ padding: '12px 24px', borderBottom: '1px solid #e5e7eb' }}>
+        <div style={{ padding: '12px 24px', paddingLeft: '48px', borderBottom: '1px solid #e5e7eb' }}>
           {challan.type === "Stitching" ? (
             <span style={{
               display: 'inline-block',
@@ -301,8 +301,8 @@ export default function ChallanView() {
         </div>
 
         {/* Recipient Section */}
-        <div style={{ padding: '16px 24px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
-          <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
+        <div style={{ padding: '16px 24px', paddingLeft: '48px', backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+          <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
             {challan.type === "Stitching" ? "Fabricator" : "Washing/Dyeing Firm"}
           </p>
           <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#1f2937', margin: '0' }}>
@@ -311,45 +311,45 @@ export default function ChallanView() {
         </div>
 
         {/* Lot Details */}
-        <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>
+        <div style={{ padding: '24px', paddingLeft: '48px', borderBottom: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 16px 0' }}>
             Lot Details
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
             <div>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Lot No</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Lot No</p>
               <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '0' }}>{lot.lot_no}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Pieces Issued</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Pieces Issued</p>
               <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#1f2937', margin: '0' }}>{challan.pcs_issued}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Style</p>
-              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.style || "-"}</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Style</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#374151', margin: '0' }}>{lot.style || "-"}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Fabric</p>
-              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.fabric_name || "-"}</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Fabric</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#374151', margin: '0' }}>{lot.fabric_name || "-"}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Sizes</p>
-              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.sizes || "-"}</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Sizes</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#374151', margin: '0' }}>{lot.sizes || "-"}</p>
             </div>
             <div>
-              <p style={{ fontSize: '12px', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Gender</p>
-              <p style={{ fontSize: '18px', fontWeight: '600', color: '#374151', margin: '0' }}>{lot.gender || "-"}</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0' }}>Gender</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#374151', margin: '0' }}>{lot.gender || "-"}</p>
             </div>
           </div>
         </div>
 
         {/* Washing/Dyeing Instructions (for Stitching Challan) */}
         {challan.type === "Stitching" && lot.dyeing_or_washing_instructions && (
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #e5e7eb' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
+          <div style={{ padding: '16px 24px', paddingLeft: '48px', borderBottom: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
               Washing/Dyeing Instructions
             </h3>
-            <p style={{ color: '#374151', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', margin: '0' }}>
+            <p style={{ fontWeight: 'bold', color: '#374151', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', margin: '0' }}>
               {lot.dyeing_or_washing_instructions}
             </p>
           </div>
@@ -357,8 +357,8 @@ export default function ChallanView() {
 
         {/* Bartack Done By (for Washing Challan) */}
         {challan.type === "Washing" && challan.bartack_person && (
-          <div style={{ padding: '16px 24px', backgroundColor: '#fffbeb', borderBottom: '1px solid #e5e7eb' }}>
-            <p style={{ fontSize: '12px', color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
+          <div style={{ padding: '16px 24px', paddingLeft: '48px', backgroundColor: '#fffbeb', borderBottom: '1px solid #e5e7eb' }}>
+            <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 4px 0' }}>
               Bartack Done By
             </p>
             <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#b45309', margin: '0' }}>
@@ -369,28 +369,28 @@ export default function ChallanView() {
 
         {/* Notes */}
         {challan.notes && (
-          <div style={{ padding: '16px 24px', borderBottom: '1px solid #e5e7eb' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: '600', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
+          <div style={{ padding: '16px 24px', paddingLeft: '48px', borderBottom: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#4b5563', textTransform: 'uppercase', letterSpacing: '0.05em', margin: '0 0 8px 0' }}>
               Notes
             </h3>
-            <p style={{ color: '#374151', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', margin: '0' }}>
+            <p style={{ fontWeight: 'bold', color: '#374151', backgroundColor: '#f9fafb', borderRadius: '8px', padding: '12px', margin: '0' }}>
               {challan.notes}
             </p>
           </div>
         )}
 
         {/* Signatures */}
-        <div style={{ padding: '24px' }}>
+        <div style={{ padding: '24px', paddingLeft: '48px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ height: '64px', borderBottom: '2px dashed #d1d5db', marginBottom: '8px' }} />
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Authorized Signature</p>
-              <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0' }}>({firmSettings.firm_name})</p>
+              <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>Authorized Signature</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', margin: '0' }}>({firmSettings.firm_name})</p>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ height: '64px', borderBottom: '2px dashed #d1d5db', marginBottom: '8px' }} />
-              <p style={{ fontSize: '14px', color: '#6b7280', margin: '0' }}>Receiver Signature</p>
-              <p style={{ fontSize: '12px', color: '#9ca3af', margin: '0' }}>({challan.recipient_name})</p>
+              <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0' }}>Receiver Signature</p>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#9ca3af', margin: '0' }}>({challan.recipient_name})</p>
             </div>
           </div>
         </div>
