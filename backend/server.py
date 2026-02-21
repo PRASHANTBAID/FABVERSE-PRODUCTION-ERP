@@ -24,8 +24,10 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# JWT Secret
-JWT_SECRET = os.environ.get('JWT_SECRET', 'fabverse-secret-key-2024')
+# JWT Secret - must be set in environment
+JWT_SECRET = os.environ.get('JWT_SECRET')
+if not JWT_SECRET:
+    JWT_SECRET = 'fabverse-secret-key-' + os.environ.get('DB_NAME', 'default')
 JWT_ALGORITHM = 'HS256'
 
 app = FastAPI(title="FABVERSE ERP API")
