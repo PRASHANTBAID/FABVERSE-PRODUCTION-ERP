@@ -339,13 +339,7 @@ async def get_lots(
 ):
     query = {}
     
-    if search:
-        query["$or"] = [
-            {"lot_no": {"$regex": search, "$options": "i"}},
-            {"fabric_name": {"$regex": search, "$options": "i"}},
-            {"style": {"$regex": search, "$options": "i"}}
-        ]
-    
+    # Basic filters on lots collection
     if stage:
         query["current_stage"] = stage
     
@@ -378,6 +372,35 @@ async def get_lots(
         # Washing
         washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
         lot["washing"] = washing
+    
+    # Apply search filter after fetching stage data (to search by person names)
+    if search:
+        search_lower = search.lower()
+        filtered_lots = []
+        for lot in lots:
+            # Search in lot fields
+            if (search_lower in (lot.get("lot_no") or "").lower() or
+                search_lower in (lot.get("fabric_name") or "").lower() or
+                search_lower in (lot.get("style") or "").lower()):
+                filtered_lots.append(lot)
+                continue
+            
+            # Search in stitching fabricator name
+            if lot.get("stitching") and search_lower in (lot["stitching"].get("stitching_fabricator_name") or "").lower():
+                filtered_lots.append(lot)
+                continue
+            
+            # Search in bartack person name
+            if lot.get("bartack") and search_lower in (lot["bartack"].get("bartack_person_name") or "").lower():
+                filtered_lots.append(lot)
+                continue
+            
+            # Search in washing/dyeing firm name
+            if lot.get("washing") and search_lower in (lot["washing"].get("dyeing_person_firm_name") or "").lower():
+                filtered_lots.append(lot)
+                continue
+        
+        return filtered_lots
     
     return lots
 
