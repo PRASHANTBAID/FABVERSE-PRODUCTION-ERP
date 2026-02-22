@@ -147,15 +147,20 @@ export default function StitchingForm() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Stitching Fabricator Name *
+                Stitching Fabricator Name {!isEditing && "*"}
               </Label>
               <Input
                 value={formData.stitching_fabricator_name}
                 onChange={(e) => handleChange("stitching_fabricator_name", e.target.value)}
                 placeholder="Enter fabricator name"
-                required
+                required={!isEditing}
+                disabled={isEditing}
+                className={isEditing ? "bg-gray-100 cursor-not-allowed" : ""}
                 data-testid="fabricator-name-input"
               />
+              {isEditing && (
+                <p className="text-xs text-muted-foreground">Fabricator name cannot be changed after challan is generated</p>
+              )}
             </div>
 
             <div className="space-y-2">
