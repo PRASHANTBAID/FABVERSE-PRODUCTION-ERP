@@ -1108,9 +1108,18 @@ async def get_reports_summary():
     total_pcs_result = await db.lots.aggregate(pipeline_pcs).to_list(1)
     total_pcs = total_pcs_result[0]["total"] if total_pcs_result else 0
     
-    # Fabric usage by type
+    # Fabric usage by type - with normalization
     pipeline_fabric = [
-        {"$group": {"_id": "$fabric_name", "total_meters": {"$sum": "$total_meters_or_kgs_used"}, "total_cost": {"$sum": {"$multiply": ["$total_meters_or_kgs_used", "$fabric_price_per_meter_or_kg"]}}}}
+        {"$project": {
+            "normalized_fabric": {"$trim": {"input": {"$toUpper": "$fabric_name"}}},
+            "total_meters_or_kgs_used": 1,
+            "fabric_price_per_meter_or_kg": 1
+        }},
+        {"$group": {
+            "_id": "$normalized_fabric", 
+            "total_meters": {"$sum": "$total_meters_or_kgs_used"}, 
+            "total_cost": {"$sum": {"$multiply": ["$total_meters_or_kgs_used", "$fabric_price_per_meter_or_kg"]}}
+        }}
     ]
     fabric_usage = await db.lots.aggregate(pipeline_fabric).to_list(100)
     
