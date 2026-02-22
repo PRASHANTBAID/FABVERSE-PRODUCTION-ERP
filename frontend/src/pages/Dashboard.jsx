@@ -284,6 +284,25 @@ export default function Dashboard() {
     }
   };
 
+  // Helper function to get current person/firm name based on stage
+  const getCurrentPerson = (lot) => {
+    const stage = lot.current_stage;
+    if (stage === "Stitching" && lot.stitching?.stitching_fabricator_name) {
+      return lot.stitching.stitching_fabricator_name;
+    }
+    if (stage === "Bartack" && lot.bartack?.bartack_person_name) {
+      return lot.bartack.bartack_person_name;
+    }
+    if (stage === "Washing/Dyeing" && lot.washing?.dyeing_person_firm_name) {
+      return lot.washing.dyeing_person_firm_name;
+    }
+    // For completed lots, show washing firm if available, else stitching fabricator
+    if (stage === "Completed") {
+      return lot.washing?.dyeing_person_firm_name || lot.stitching?.stitching_fabricator_name || "-";
+    }
+    return "-";
+  };
+
   const getStageStyle = (stage) => {
     const styles = {
       "Cutting": "bg-blue-100 text-blue-700 border-l-4 border-l-blue-500",
