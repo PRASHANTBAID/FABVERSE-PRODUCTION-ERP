@@ -486,8 +486,7 @@ export default function Dashboard() {
                     <TableHead className="font-semibold text-gray-600">Pcs</TableHead>
                     <TableHead className="font-semibold text-gray-600 hidden lg:table-cell">Fabric</TableHead>
                     <TableHead className="font-semibold text-gray-600 hidden md:table-cell">Style</TableHead>
-                    <TableHead className="font-semibold text-gray-600 hidden xl:table-cell">Fabricator</TableHead>
-                    <TableHead className="font-semibold text-gray-600">Stage</TableHead>
+                    <TableHead className="font-semibold text-gray-600">Stage / Person</TableHead>
                     <TableHead className="font-semibold text-gray-600 hidden sm:table-cell">Status</TableHead>
                     <TableHead className="font-semibold text-gray-600">Actions</TableHead>
                   </TableRow>
@@ -504,13 +503,17 @@ export default function Dashboard() {
                       <TableCell className="text-gray-600">{lot.total_pcs_cut}</TableCell>
                       <TableCell className="text-gray-600 max-w-32 truncate hidden lg:table-cell">{lot.fabric_name || "-"}</TableCell>
                       <TableCell className="text-gray-600 hidden md:table-cell">{lot.style || "-"}</TableCell>
-                      <TableCell className="text-gray-600 hidden xl:table-cell">
-                        {lot.stitching?.stitching_fabricator_name || "-"}
-                      </TableCell>
                       <TableCell>
-                        <span className={cn("px-2 py-1 rounded text-xs font-medium whitespace-nowrap", getStageStyle(lot.current_stage))}>
-                          {lot.current_stage}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={cn("px-2 py-1 rounded text-xs font-medium whitespace-nowrap inline-block w-fit", getStageStyle(lot.current_stage))}>
+                            {lot.current_stage}
+                          </span>
+                          {getCurrentPerson(lot) !== "-" && (
+                            <span className="text-xs text-gray-600 font-medium truncate max-w-[120px]" title={getCurrentPerson(lot)}>
+                              {getCurrentPerson(lot)}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="hidden sm:table-cell">
                         <span className={cn("px-2 py-1 rounded text-xs font-medium whitespace-nowrap", getStatusStyle(lot.overall_status))}>
