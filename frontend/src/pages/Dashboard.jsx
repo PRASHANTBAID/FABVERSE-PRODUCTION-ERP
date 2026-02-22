@@ -84,6 +84,23 @@ const DraggableLotCard = ({ lot, onClick }) => {
     return styles[status] || "bg-gray-100 text-gray-700";
   };
 
+  // Get person name based on current stage
+  const getPersonName = () => {
+    const stage = lot.current_stage;
+    if (stage === "Stitching" && lot.stitching?.stitching_fabricator_name) {
+      return lot.stitching.stitching_fabricator_name;
+    }
+    if (stage === "Bartack" && lot.bartack?.bartack_person_name) {
+      return lot.bartack.bartack_person_name;
+    }
+    if (stage === "Washing/Dyeing" && lot.washing?.dyeing_person_firm_name) {
+      return lot.washing.dyeing_person_firm_name;
+    }
+    return null;
+  };
+
+  const personName = getPersonName();
+
   return (
     <div
       ref={setNodeRef}
@@ -107,6 +124,11 @@ const DraggableLotCard = ({ lot, onClick }) => {
           <p className="font-semibold text-gray-800 text-sm">{lot.lot_no}</p>
           <p className="text-xs text-gray-500 mt-1">{lot.style || "No style"}</p>
           <p className="text-xs text-gray-500">{lot.total_pcs_cut} pcs</p>
+          {personName && (
+            <p className="text-xs text-blue-600 font-medium mt-1 truncate" title={personName}>
+              → {personName}
+            </p>
+          )}
           <div className="mt-2">
             <span className={cn("px-2 py-0.5 rounded text-xs font-medium", getStatusStyle(lot.overall_status))}>
               {lot.overall_status}
