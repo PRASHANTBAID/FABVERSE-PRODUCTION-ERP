@@ -160,15 +160,20 @@ export default function WashingForm() {
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Washing/Dyeing Firm Name *
+                Washing/Dyeing Firm Name {!isEditing && "*"}
               </Label>
               <Input
                 value={formData.dyeing_person_firm_name}
                 onChange={(e) => handleChange("dyeing_person_firm_name", e.target.value)}
                 placeholder="Enter firm name"
-                required
+                required={!isEditing}
+                disabled={isEditing}
+                className={isEditing ? "bg-gray-100 cursor-not-allowed" : ""}
                 data-testid="washing-firm-input"
               />
+              {isEditing && (
+                <p className="text-xs text-muted-foreground">Firm name cannot be changed after challan is generated</p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
