@@ -1114,15 +1114,17 @@ async def get_reports_summary():
     ]
     fabric_usage = await db.lots.aggregate(pipeline_fabric).to_list(100)
     
-    # Stitching fabricator load
+    # Stitching fabricator load - with normalization to handle trailing spaces
     pipeline_stitch = [
-        {"$group": {"_id": "$stitching_fabricator_name", "count": {"$sum": 1}}}
+        {"$project": {"normalized_name": {"$trim": {"input": {"$toUpper": "$stitching_fabricator_name"}}}}},
+        {"$group": {"_id": "$normalized_name", "count": {"$sum": 1}}}
     ]
     stitch_load = await db.stitching_stages.aggregate(pipeline_stitch).to_list(100)
     
-    # Washing firm load
+    # Washing firm load - with normalization to handle trailing spaces
     pipeline_wash = [
-        {"$group": {"_id": "$dyeing_person_firm_name", "count": {"$sum": 1}}}
+        {"$project": {"normalized_name": {"$trim": {"input": {"$toUpper": "$dyeing_person_firm_name"}}}}},
+        {"$group": {"_id": "$normalized_name", "count": {"$sum": 1}}}
     ]
     wash_load = await db.washing_stages.aggregate(pipeline_wash).to_list(100)
     
