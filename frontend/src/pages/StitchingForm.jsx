@@ -160,17 +160,23 @@ export default function StitchingForm() {
 
             <div className="space-y-2">
               <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                Issue Date to Stitching *
+                Issue Date to Stitching {!isEditing && "*"}
               </Label>
               <Input
                 type="date"
                 value={formData.lot_issue_date_to_stitching}
                 onChange={(e) => handleChange("lot_issue_date_to_stitching", e.target.value)}
-                min={getTodayDate()}
-                required
+                min={!isEditing ? getTodayDate() : undefined}
+                required={!isEditing}
+                disabled={isEditing}
+                className={isEditing ? "bg-gray-100 cursor-not-allowed" : ""}
                 data-testid="issue-date-input"
               />
-              <p className="text-xs text-muted-foreground">Future dates only for new entries</p>
+              {isEditing ? (
+                <p className="text-xs text-muted-foreground">Issue date cannot be changed after challan is generated</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">Future dates only for new entries</p>
+              )}
             </div>
 
             {isEditing && (
