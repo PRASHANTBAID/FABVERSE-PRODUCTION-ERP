@@ -416,7 +416,7 @@ export default function Dashboard() {
           <div className="flex-1 relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
-              placeholder="Search lot, fabric, style, fabricator..."
+              placeholder="Search lot, fabric, style, person name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10 bg-gray-50 border-gray-200"
