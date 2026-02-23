@@ -819,10 +819,17 @@ async def get_challans(challan_type: str = None, lot_id: str = None):
     
     challans = await db.challans.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
-    # Fetch lot data for each challan
+    if not challans:
+        return challans
+    
+    # Batch fetch lot data using $in operator (optimized - avoids N+1 queries)
+    lot_ids = list(set([c.get("lot_id") for c in challans if c.get("lot_id")]))
+    lots_list = await db.lots.find({"id": {"$in": lot_ids}}, {"_id": 0, "id": 1, "lot_no": 1}).to_list(1000)
+    lots_map = {lot["id"]: lot for lot in lots_list}
+    
+    # Map lot data to challans
     for challan in challans:
-        lot = await db.lots.find_one({"id": challan.get("lot_id")}, {"_id": 0, "lot_no": 1})
-        challan["lot"] = lot
+        challan["lot"] = lots_map.get(challan.get("lot_id"))
     
     return challans
 
