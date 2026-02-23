@@ -242,6 +242,7 @@ export default function LotDetail() {
         actionLabel="Edit"
         actionPath={`/cutting/${lotId}`}
         lotId={lotId}
+        hasData={true}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
           <InfoRow label="Cutting Date" value={formatDate(lot.cutting_date)} />
