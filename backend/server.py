@@ -357,21 +357,30 @@ async def get_lots(
     
     lots = await db.lots.find(query, {"_id": 0}).sort("created_at", -1).to_list(1000)
     
-    # Fetch related stage data for each lot
+    if not lots:
+        return lots
+    
+    # Batch fetch all stage data using $in operator (optimized - avoids N+1 queries)
+    lot_ids = [lot["id"] for lot in lots]
+    
+    # Fetch all stitching stages in one query
+    stitching_list = await db.stitching_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    stitching_map = {s["lot_id"]: s for s in stitching_list}
+    
+    # Fetch all bartack stages in one query
+    bartack_list = await db.bartack_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    bartack_map = {b["lot_id"]: b for b in bartack_list}
+    
+    # Fetch all washing stages in one query
+    washing_list = await db.washing_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    washing_map = {w["lot_id"]: w for w in washing_list}
+    
+    # Map stage data to lots
     for lot in lots:
         lot_id = lot["id"]
-        
-        # Stitching
-        stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        lot["stitching"] = stitching
-        
-        # Bartack
-        bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        lot["bartack"] = bartack
-        
-        # Washing
-        washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        lot["washing"] = washing
+        lot["stitching"] = stitching_map.get(lot_id)
+        lot["bartack"] = bartack_map.get(lot_id)
+        lot["washing"] = washing_map.get(lot_id)
     
     # Apply search filter after fetching stage data (to search by person names)
     if search:
