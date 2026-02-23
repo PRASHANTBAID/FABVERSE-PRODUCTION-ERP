@@ -1407,6 +1407,21 @@ async def get_delayed_lots(days_threshold: int = 7):
         {"_id": 0}
     ).to_list(1000)
     
+    if not lots:
+        return delayed_lots
+    
+    # Batch fetch all stage data (optimized - avoids N+1 queries)
+    lot_ids = [lot["id"] for lot in lots]
+    
+    stitching_list = await db.stitching_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    stitching_map = {s["lot_id"]: s for s in stitching_list}
+    
+    bartack_list = await db.bartack_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    bartack_map = {b["lot_id"]: b for b in bartack_list}
+    
+    washing_list = await db.washing_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    washing_map = {w["lot_id"]: w for w in washing_list}
+    
     for lot in lots:
         lot_id = lot["id"]
         current_stage = lot.get("current_stage", "Cutting")
@@ -1419,17 +1434,17 @@ async def get_delayed_lots(days_threshold: int = 7):
                     stage_start_date = datetime.fromisoformat(lot["cutting_date"]).date()
             
             elif current_stage == "Stitching":
-                stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+                stitching = stitching_map.get(lot_id)
                 if stitching and stitching.get("lot_issue_date_to_stitching"):
                     stage_start_date = datetime.fromisoformat(stitching["lot_issue_date_to_stitching"]).date()
             
             elif current_stage == "Bartack":
-                bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+                bartack = bartack_map.get(lot_id)
                 if bartack and bartack.get("lot_issue_to_bartack_date"):
                     stage_start_date = datetime.fromisoformat(bartack["lot_issue_to_bartack_date"]).date()
             
             elif current_stage == "Washing/Dyeing":
-                washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+                washing = washing_map.get(lot_id)
                 if washing and washing.get("lot_issue_date_to_washing"):
                     stage_start_date = datetime.fromisoformat(washing["lot_issue_date_to_washing"]).date()
             
