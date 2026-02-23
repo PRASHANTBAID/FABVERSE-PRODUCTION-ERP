@@ -1301,6 +1301,27 @@ async def get_turnaround_times():
     # Get all lots with stage data
     lots = await db.lots.find({}, {"_id": 0}).to_list(1000)
     
+    if not lots:
+        return {
+            "cutting_to_stitching": {"average_days": 0, "sample_size": 0},
+            "stitching_to_bartack": {"average_days": 0, "sample_size": 0},
+            "bartack_to_washing": {"average_days": 0, "sample_size": 0},
+            "washing_to_complete": {"average_days": 0, "sample_size": 0},
+            "total_turnaround": {"average_days": 0, "sample_size": 0}
+        }
+    
+    # Batch fetch all stage data (optimized - avoids N+1 queries)
+    lot_ids = [lot["id"] for lot in lots]
+    
+    stitching_list = await db.stitching_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    stitching_map = {s["lot_id"]: s for s in stitching_list}
+    
+    bartack_list = await db.bartack_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    bartack_map = {b["lot_id"]: b for b in bartack_list}
+    
+    washing_list = await db.washing_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    washing_map = {w["lot_id"]: w for w in washing_list}
+    
     # Calculate turnaround times
     cutting_to_stitching = []
     stitching_to_bartack = []
@@ -1312,10 +1333,10 @@ async def get_turnaround_times():
         lot_id = lot["id"]
         cutting_date = lot.get("cutting_date")
         
-        # Get stage data
-        stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        # Get stage data from maps
+        stitching = stitching_map.get(lot_id)
+        bartack = bartack_map.get(lot_id)
+        washing = washing_map.get(lot_id)
         
         try:
             if cutting_date and stitching and stitching.get("lot_issue_date_to_stitching"):
