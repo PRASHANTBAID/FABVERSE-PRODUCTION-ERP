@@ -350,8 +350,9 @@ export default function LotDetail() {
         isActive={currentStageIndex === 3}
         isCompleted={currentStageIndex > 3}
         actionLabel={lot.washing ? "Update" : "Start Washing"}
-        actionPath={currentStageIndex >= 2 ? `/lot/${lotId}/washing` : null}
+        actionPath={`/lot/${lotId}/washing`}
         lotId={lotId}
+        hasData={!!lot.washing}
       >
         {lot.washing ? (
           <>
