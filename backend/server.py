@@ -1053,12 +1053,36 @@ async def import_excel(file: UploadFile = File(...)):
 async def export_excel():
     lots = await db.lots.find({}, {"_id": 0}).to_list(1000)
     
+    if not lots:
+        df = pd.DataFrame([])
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False, sheet_name='Production Data')
+        output.seek(0)
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": "attachment; filename=fabverse_export.xlsx"}
+        )
+    
+    # Batch fetch all stage data using $in operator (optimized - avoids N+1 queries)
+    lot_ids = [lot["id"] for lot in lots]
+    
+    stitching_list = await db.stitching_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    stitching_map = {s["lot_id"]: s for s in stitching_list}
+    
+    bartack_list = await db.bartack_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    bartack_map = {b["lot_id"]: b for b in bartack_list}
+    
+    washing_list = await db.washing_stages.find({"lot_id": {"$in": lot_ids}}, {"_id": 0}).to_list(1000)
+    washing_map = {w["lot_id"]: w for w in washing_list}
+    
     export_data = []
     for lot in lots:
         lot_id = lot["id"]
-        stitching = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        bartack = await db.bartack_stages.find_one({"lot_id": lot_id}, {"_id": 0})
-        washing = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
+        stitching = stitching_map.get(lot_id)
+        bartack = bartack_map.get(lot_id)
+        washing = washing_map.get(lot_id)
         
         # Match your Excel format exactly
         row = {
