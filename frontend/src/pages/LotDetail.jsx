@@ -274,6 +274,7 @@ export default function LotDetail() {
         actionLabel={lot.stitching ? "Update" : "Start Stitching"}
         actionPath={`/lot/${lotId}/stitching`}
         lotId={lotId}
+        hasData={!!lot.stitching}
       >
         {lot.stitching ? (
           <>
