@@ -32,14 +32,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const StageCard = ({ stage, icon: Icon, title, isActive, isCompleted, children, actionLabel, actionPath, lotId }) => {
+const StageCard = ({ stage, icon: Icon, title, isActive, isCompleted, children, actionLabel, actionPath, lotId, hasData }) => {
   const navigate = useNavigate();
   
   return (
     <Card className={cn(
       "industrial-card transition-all duration-300",
       isActive && "ring-2 ring-primary",
-      isCompleted && "opacity-80"
+      isCompleted && "opacity-90"
     )}>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
@@ -61,14 +61,19 @@ const StageCard = ({ stage, icon: Icon, title, isActive, isCompleted, children, 
               </Badge>
             </div>
           </div>
-          {actionPath && !isCompleted && (
+          {actionPath && (
             <Button
               size="sm"
               variant={isActive ? "default" : "outline"}
               onClick={() => navigate(actionPath)}
               data-testid={`${stage}-action-btn`}
             >
-              {actionLabel}
+              {isCompleted && hasData ? (
+                <>
+                  <Edit className="w-3 h-3 mr-1" />
+                  Edit
+                </>
+              ) : actionLabel}
             </Button>
           )}
         </div>
