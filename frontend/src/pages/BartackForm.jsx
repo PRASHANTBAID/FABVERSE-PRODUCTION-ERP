@@ -164,7 +164,6 @@ export default function BartackForm() {
                 type="date"
                 value={formData.lot_issue_to_bartack_date}
                 onChange={(e) => handleChange("lot_issue_to_bartack_date", e.target.value)}
-                min={getTodayDate()}
                 required
                 data-testid="bartack-date-input"
               />
