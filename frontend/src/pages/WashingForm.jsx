@@ -177,21 +177,15 @@ export default function WashingForm() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label className="text-xs uppercase tracking-widest text-muted-foreground">
-                  Issue Date to Washing {!isEditing && "*"}
+                  Issue Date to Washing *
                 </Label>
                 <Input
                   type="date"
                   value={formData.lot_issue_date_to_washing}
                   onChange={(e) => handleChange("lot_issue_date_to_washing", e.target.value)}
-                  min={!isEditing ? getTodayDate() : undefined}
-                  required={!isEditing}
-                  disabled={isEditing}
-                  className={isEditing ? "bg-gray-100 cursor-not-allowed" : ""}
+                  required
                   data-testid="washing-issue-date-input"
                 />
-                {isEditing && (
-                  <p className="text-xs text-muted-foreground">Issue date cannot be changed after challan is generated</p>
-                )}
               </div>
 
               <div className="space-y-2">
@@ -203,8 +197,6 @@ export default function WashingForm() {
                   value={formData.pcs_issued_to_washing}
                   onChange={(e) => handleChange("pcs_issued_to_washing", parseInt(e.target.value) || 0)}
                   placeholder="Enter pieces"
-                  disabled={isEditing}
-                  className={isEditing ? "bg-gray-100 cursor-not-allowed" : ""}
                   data-testid="washing-pcs-issued-input"
                 />
               </div>
