@@ -317,8 +317,9 @@ export default function LotDetail() {
         isActive={currentStageIndex === 2}
         isCompleted={currentStageIndex > 2}
         actionLabel={lot.bartack ? "Update" : "Start Bartack"}
-        actionPath={currentStageIndex >= 1 ? `/lot/${lotId}/bartack` : null}
+        actionPath={`/lot/${lotId}/bartack`}
         lotId={lotId}
+        hasData={!!lot.bartack}
       >
         {lot.bartack ? (
           <>
