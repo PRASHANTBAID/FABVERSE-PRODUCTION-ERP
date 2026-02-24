@@ -1482,6 +1482,65 @@ async def get_delayed_lots(days_threshold: int = 7):
         "delayed_lots": delayed_lots
     }
 
+# ==================== DATA REPAIR ====================
+
+@api_router.post("/repair/lot-stages")
+async def repair_lot_stages(authorization: str = Header(None)):
+    """Repair inconsistent lot stages based on actual stage data"""
+    await get_current_user(authorization)
+    
+    lots = await db.lots.find({}, {"_id": 0}).to_list(1000)
+    fixed_count = 0
+    
+    for lot in lots:
+        lot_id = lot["id"]
+        current_stage = lot.get("current_stage", "Cutting")
+        
+        # Check what stage data exists
+        stitching = await db.stitching_stages.find_one({"lot_id": lot_id})
+        bartack = await db.bartack_stages.find_one({"lot_id": lot_id})
+        washing = await db.washing_stages.find_one({"lot_id": lot_id})
+        
+        # Determine correct stage based on data
+        correct_stage = "Cutting"
+        correct_status = "Pending"
+        
+        if washing:
+            if washing.get("receive_date_from_washing") and washing.get("pcs_received_back_from_washing"):
+                correct_stage = "Completed"
+                correct_status = "Completed"
+            else:
+                correct_stage = "Washing/Dyeing"
+                correct_status = "In Progress"
+        elif bartack:
+            correct_stage = "Bartack"
+            correct_status = "In Progress"
+        elif stitching:
+            if stitching.get("receive_date_from_stitching") and stitching.get("pcs_received_back_from_stitching"):
+                correct_stage = "Bartack"  # Should move to bartack after stitching received
+            else:
+                correct_stage = "Stitching"
+            correct_status = "In Progress"
+        
+        # Fix if different
+        if current_stage != correct_stage or lot.get("overall_status") != correct_status:
+            await db.lots.update_one(
+                {"id": lot_id},
+                {"$set": {
+                    "current_stage": correct_stage,
+                    "overall_status": correct_status,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }}
+            )
+            fixed_count += 1
+            logger.info(f"Fixed lot {lot.get('lot_no')}: {current_stage} -> {correct_stage}")
+    
+    return {
+        "message": f"Repaired {fixed_count} lots",
+        "fixed_count": fixed_count,
+        "total_lots": len(lots)
+    }
+
 # ==================== ROOT ====================
 
 @api_router.get("/")
