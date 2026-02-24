@@ -134,7 +134,7 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="firm" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="firm" data-testid="firm-settings-tab">
             <Building2 className="w-4 h-4 mr-2" />
             Firm Details
@@ -142,6 +142,10 @@ export default function Settings() {
           <TabsTrigger value="account" data-testid="account-settings-tab">
             <User className="w-4 h-4 mr-2" />
             Account
+          </TabsTrigger>
+          <TabsTrigger value="maintenance" data-testid="maintenance-tab">
+            <Wrench className="w-4 h-4 mr-2" />
+            Maintenance
           </TabsTrigger>
           <TabsTrigger value="about" data-testid="about-tab">
             <SettingsIcon className="w-4 h-4 mr-2" />
