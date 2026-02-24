@@ -698,10 +698,14 @@ async def create_bartack_stage(stage: BartackStageCreate):
     
     await db.bartack_stages.insert_one(stage_doc)
     
-    # Update lot stage
+    # Update lot stage and status
     await db.lots.update_one(
         {"id": stage.lot_id},
-        {"$set": {"current_stage": "Bartack"}}
+        {"$set": {
+            "current_stage": "Bartack",
+            "overall_status": "In Progress",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
     )
     
     stage_doc.pop("_id", None)
