@@ -777,10 +777,14 @@ async def create_washing_stage(stage: WashingStageCreate):
     }
     await db.challans.insert_one(challan_doc)
     
-    # Update lot stage
+    # Update lot stage and status
     await db.lots.update_one(
         {"id": stage.lot_id},
-        {"$set": {"current_stage": "Washing/Dyeing"}}
+        {"$set": {
+            "current_stage": "Washing/Dyeing",
+            "overall_status": "In Progress",
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }}
     )
     
     stage_doc.pop("_id", None)
