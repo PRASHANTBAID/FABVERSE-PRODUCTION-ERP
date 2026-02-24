@@ -2,13 +2,23 @@ import { useState, useEffect } from "react";
 import { api } from "@/App";
 import { useAuth } from "@/App";
 import { toast } from "sonner";
-import { Settings as SettingsIcon, Key, User, Save, Building2, Upload, Image } from "lucide-react";
+import { Settings as SettingsIcon, Key, User, Save, Building2, Upload, Image, Wrench, RefreshCw, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function Settings() {
   const { user } = useAuth();
