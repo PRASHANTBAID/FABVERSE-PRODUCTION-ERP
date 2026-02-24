@@ -131,6 +131,7 @@ function App() {
           <Route path="/challan/:challanId" element={<ProtectedRoute><ChallanView /></ProtectedRoute>} />
           <Route path="/import-export" element={<ProtectedRoute><ImportExport /></ProtectedRoute>} />
           <Route path="/reports" element={<ProtectedRoute><Reports /></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/change-password" element={<ProtectedRoute><ChangePassword /></ProtectedRoute>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
