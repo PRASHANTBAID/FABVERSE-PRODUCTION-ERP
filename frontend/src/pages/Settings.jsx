@@ -107,6 +107,25 @@ export default function Settings() {
     setFirmSettings((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleRepairData = async () => {
+    setRepairing(true);
+    setRepairResult(null);
+    try {
+      const response = await api.post("/repair/lot-stages");
+      setRepairResult(response.data);
+      if (response.data.fixed_count > 0) {
+        toast.success(`Successfully repaired ${response.data.fixed_count} lots!`);
+      } else {
+        toast.info("All lots are already in correct state. No repairs needed.");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Failed to repair data");
+    } finally {
+      setRepairing(false);
+      setRepairDialogOpen(false);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-slide-in" data-testid="settings-page">
       <div>
