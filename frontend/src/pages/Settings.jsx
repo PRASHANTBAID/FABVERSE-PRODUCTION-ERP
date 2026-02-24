@@ -585,6 +585,31 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Repair Confirmation Dialog */}
+      <AlertDialog open={repairDialogOpen} onOpenChange={setRepairDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Repair Lot Stages</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will scan all lots and fix any stage inconsistencies. Lots showing incorrect stages 
+              (e.g., showing Bartack when they should be in Washing) will be corrected.
+              <br /><br />
+              <strong>This action is safe and won't delete any data.</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={repairing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleRepairData} 
+              disabled={repairing}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {repairing ? "Repairing..." : "Repair Now"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
