@@ -18,6 +18,7 @@ import ChallanView from "@/pages/ChallanView";
 import ImportExport from "@/pages/ImportExport";
 import Reports from "@/pages/Reports";
 import ChangePassword from "@/pages/ChangePassword";
+import Settings from "@/pages/Settings";
 import Layout from "@/components/Layout";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
