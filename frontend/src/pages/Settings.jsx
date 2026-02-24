@@ -465,6 +465,89 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
+        {/* Maintenance Tab */}
+        <TabsContent value="maintenance" className="space-y-6">
+          <Card className="industrial-card">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Wrench className="w-6 h-6 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg uppercase tracking-wide">Data Maintenance</CardTitle>
+                  <CardDescription>Tools to fix and maintain your production data</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Repair Lot Stages */}
+              <div className="p-4 border rounded-lg space-y-4">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <RefreshCw className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-base">Repair Lot Stages</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Fix lots that are showing incorrect stages. This will check all lots and correct their stage based on actual data.
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      <strong>Use this when:</strong>
+                    </p>
+                    <ul className="text-sm text-muted-foreground list-disc list-inside mt-1">
+                      <li>A lot shows wrong stage on dashboard (e.g., showing Bartack but should be Washing)</li>
+                      <li>Lot status doesn't match the actual production stage</li>
+                      <li>After data import or migration issues</li>
+                    </ul>
+                  </div>
+                </div>
+                
+                {repairResult && (
+                  <div className={`p-3 rounded-lg ${repairResult.fixed_count > 0 ? 'bg-green-50 border border-green-200' : 'bg-blue-50 border border-blue-200'}`}>
+                    <p className={`text-sm font-medium ${repairResult.fixed_count > 0 ? 'text-green-800' : 'text-blue-800'}`}>
+                      {repairResult.fixed_count > 0 
+                        ? `✓ Successfully repaired ${repairResult.fixed_count} out of ${repairResult.total_lots} lots`
+                        : `✓ All ${repairResult.total_lots} lots are already in correct state`
+                      }
+                    </p>
+                  </div>
+                )}
+                
+                <Button 
+                  onClick={() => setRepairDialogOpen(true)} 
+                  disabled={repairing}
+                  className="bg-blue-600 hover:bg-blue-700"
+                  data-testid="repair-data-btn"
+                >
+                  {repairing ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
+                      Repairing...
+                    </span>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Repair Lot Stages
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Warning Note */}
+              <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium text-amber-800">Important Note</p>
+                  <p className="text-amber-700 mt-1">
+                    The repair tool will automatically detect and fix stage inconsistencies. It's safe to run and won't delete any data. 
+                    If you're experiencing issues with lot stages not updating correctly, run this repair first.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* About Tab */}
         <TabsContent value="about">
           <Card className="industrial-card">
