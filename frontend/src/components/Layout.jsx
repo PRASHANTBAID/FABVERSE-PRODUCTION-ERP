@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   X,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -26,6 +27,7 @@ const navItems = [
   { path: "/challans", icon: FileText, label: "Challans" },
   { path: "/reports", icon: BarChart3, label: "Reports" },
   { path: "/import-export", icon: Upload, label: "Import/Export" },
+  { path: "/settings", icon: Settings, label: "Settings" },
   { path: "/change-password", icon: Lock, label: "Change Password" },
 ];
 
