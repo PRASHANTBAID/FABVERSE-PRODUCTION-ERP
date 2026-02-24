@@ -25,6 +25,9 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [savingFirm, setSavingFirm] = useState(false);
   const [loadingFirm, setLoadingFirm] = useState(true);
+  const [repairing, setRepairing] = useState(false);
+  const [repairDialogOpen, setRepairDialogOpen] = useState(false);
+  const [repairResult, setRepairResult] = useState(null);
   
   const [passwords, setPasswords] = useState({
     old_password: "",
