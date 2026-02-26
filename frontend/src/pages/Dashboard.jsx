@@ -373,7 +373,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <StatCard
           title="Total Lots"
           value={stats?.total_lots || lots.length}
@@ -389,11 +389,18 @@ export default function Dashboard() {
           iconColor="text-purple-600"
         />
         <StatCard
-          title="Stitching/Bartack"
-          value={getStageCount("Stitching") + getStageCount("Bartack")}
-          icon={Settings2}
+          title="Stitching"
+          value={getStageCount("Stitching")}
+          icon={Shirt}
           iconBg="bg-amber-100"
           iconColor="text-amber-600"
+        />
+        <StatCard
+          title="Bartack"
+          value={getStageCount("Bartack")}
+          icon={Sparkles}
+          iconBg="bg-orange-100"
+          iconColor="text-orange-600"
         />
         <StatCard
           title="Washing"
