@@ -664,11 +664,29 @@ async def update_stitching_stage(lot_id: str, stage: StitchingStageUpdate):
     
     await db.stitching_stages.update_one({"lot_id": lot_id}, {"$set": update_data})
     
+    # Also update the challan if fabricator name or issue date changed
+    challan_update = {}
+    if stage.stitching_fabricator_name is not None:
+        challan_update["recipient_name"] = stage.stitching_fabricator_name
+    if stage.lot_issue_date_to_stitching is not None:
+        challan_update["issue_date"] = stage.lot_issue_date_to_stitching
+    
+    if challan_update:
+        challan_update["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.challans.update_one(
+            {"lot_id": lot_id, "challan_type": "Stitching"},
+            {"$set": challan_update}
+        )
+    
     # If received, check if should move to Bartack
     if stage.receive_date_from_stitching and stage.pcs_received_back_from_stitching:
         await db.lots.update_one(
             {"id": lot_id},
-            {"$set": {"current_stage": "Bartack"}}
+            {"$set": {
+                "current_stage": "Bartack",
+                "overall_status": "In Progress",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
         )
     
     updated = await db.stitching_stages.find_one({"lot_id": lot_id}, {"_id": 0})
