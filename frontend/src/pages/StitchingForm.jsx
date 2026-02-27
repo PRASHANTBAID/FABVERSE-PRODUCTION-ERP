@@ -68,19 +68,35 @@ export default function StitchingForm() {
 
     setSaving(true);
     try {
+      // Clean up form data - convert empty strings to null for optional integer fields
+      const cleanedData = {
+        ...formData,
+        pcs_received_back_from_stitching: formData.pcs_received_back_from_stitching === "" || formData.pcs_received_back_from_stitching === null 
+          ? null 
+          : parseInt(formData.pcs_received_back_from_stitching) || null,
+        receive_date_from_stitching: formData.receive_date_from_stitching || null,
+      };
+
       if (isEditing) {
-        await api.put(`/stitching/${lotId}`, formData);
+        await api.put(`/stitching/${lotId}`, cleanedData);
         toast.success("Stitching stage updated");
       } else {
         await api.post("/stitching", {
           lot_id: lotId,
-          ...formData,
+          ...cleanedData,
         });
         toast.success("Stitching stage started - Challan generated");
       }
       navigate(`/lot/${lotId}`);
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to save");
+      const errorMsg = error.response?.data?.detail;
+      if (typeof errorMsg === 'string') {
+        toast.error(errorMsg);
+      } else if (Array.isArray(errorMsg)) {
+        toast.error(errorMsg.map(e => e.msg || e).join(', '));
+      } else {
+        toast.error("Failed to save stitching stage");
+      }
     } finally {
       setSaving(false);
     }
