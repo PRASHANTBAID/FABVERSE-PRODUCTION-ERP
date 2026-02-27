@@ -805,11 +805,31 @@ async def update_washing_stage(lot_id: str, stage: WashingStageUpdate):
     
     await db.washing_stages.update_one({"lot_id": lot_id}, {"$set": update_data})
     
+    # Also update the challan if pcs_issued_to_washing or firm name changed
+    challan_update = {}
+    if stage.pcs_issued_to_washing is not None:
+        challan_update["pcs_issued"] = stage.pcs_issued_to_washing
+    if stage.dyeing_person_firm_name is not None:
+        challan_update["recipient_name"] = stage.dyeing_person_firm_name
+    if stage.lot_issue_date_to_washing is not None:
+        challan_update["issue_date"] = stage.lot_issue_date_to_washing
+    
+    if challan_update:
+        challan_update["updated_at"] = datetime.now(timezone.utc).isoformat()
+        await db.challans.update_one(
+            {"lot_id": lot_id, "challan_type": "Washing"},
+            {"$set": challan_update}
+        )
+    
     # If received, mark as completed
     if stage.receive_date_from_washing and stage.pcs_received_back_from_washing:
         await db.lots.update_one(
             {"id": lot_id},
-            {"$set": {"current_stage": "Completed", "overall_status": "Completed"}}
+            {"$set": {
+                "current_stage": "Completed",
+                "overall_status": "Completed",
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }}
         )
     
     updated = await db.washing_stages.find_one({"lot_id": lot_id}, {"_id": 0})
